@@ -1,0 +1,4 @@
+# This gives access to the latest performance improvements and "unstable" optimizations, including generic sharing.
+[toolchain]
+channel = "nightly"
+

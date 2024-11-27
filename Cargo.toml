@@ -1,0 +1,13 @@
+[package]
+name = "hexgridspiral"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rand = { version = "0.8.5" }
+rand_chacha = { version = "0.3.1"}
+# Newtypes type-safety but with operators
+# You can specify the types of derives that you need for less time spent
+# compiling. For the full list of features see this crate its `Cargo.toml`.
+derive_more = { version = "1", features = ["from", "add", "mul", "into", "display", "not"] }
+num_enum = {version = "0.7.3"}
