@@ -16,7 +16,6 @@
 // Instead, (they) make new objects.
 use derive_more::{Add, Display, From, Into, Mul, Neg, Sub};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
-use rand::Rng;
 use std::ops;
 
 #[derive(
@@ -200,7 +199,7 @@ impl RingEdge {
 
     /// Transforms two distinct corners into an edge.
     /// Not defined for just one corner.
-    pub fn from_corners<'a>(mut a: &'a RingCornerIndex, mut b: &'a RingCornerIndex) -> Self {
+    pub fn from_corners<'a>(a: &'a RingCornerIndex, b: &'a RingCornerIndex) -> Self {
         assert_ne!(a, b);
         let a_val: u8 = (*a).into();
         let b_val: u8 = (*b).into();
@@ -220,7 +219,7 @@ impl RingEdge {
     }
 
     pub fn from_primitive(p: u8) -> Self {
-        Self((p % 6))
+        Self(p % 6)
     }
 }
 
@@ -353,9 +352,9 @@ impl Ring {
         let b = self.min();
         let ring = Ring::from_tile_index(&h);
         let side_size = ring.full_edge_size() - 1;
-        let offset = (h - b).value();
+        assert!(h >= b);
+        let offset : u64 = (h - b).value();
         let ring_size = ring.size();
-        assert!(offset >= 0);
         assert!(
             offset < ring_size,
             "offset={offset:?}, ringsize={ring_size:?}, h={h:?}, ring={ring:?}"
@@ -525,17 +524,17 @@ impl CCTile {
         // positive: left
         let s_q = (self.s - self.q).abs();
 
-        let rci_qr = if (self.q - self.r > 0) {
+        let rci_qr = if self.q - self.r > 0 {
             RingCornerIndex::TOPRIGHT
         } else {
             RingCornerIndex::BOTTOMLEFT
         };
-        let rci_rs = if (self.r - self.s > 0) {
+        let rci_rs = if self.r - self.s > 0 {
             RingCornerIndex::BOTTOMRIGHT
         } else {
             RingCornerIndex::TOPLEFT
         };
-        let rci_sq = if (self.s - self.q > 0) {
+        let rci_sq = if self.s - self.q > 0 {
             RingCornerIndex::LEFT
         } else {
             RingCornerIndex::RIGHT
