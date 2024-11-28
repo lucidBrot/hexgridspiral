@@ -175,7 +175,7 @@ pub struct RingEdge(u8);
 /// The n-th corner is the start of the n-th edge.
 #[derive(Debug, Copy, Clone, PartialEq, Add, Display, TryFromPrimitive, IntoPrimitive, Eq)]
 #[repr(u8)]
-enum RingCornerIndex {
+pub enum RingCornerIndex {
     RIGHT = 0,
     TOPRIGHT = 1,
     TOPLEFT = 2,
@@ -185,22 +185,22 @@ enum RingCornerIndex {
 }
 
 impl RingEdge {
-    fn start(&self) -> RingCornerIndex {
+    pub fn start(&self) -> RingCornerIndex {
         TryInto::<RingCornerIndex>::try_into(self.0).unwrap()
     }
 
-    fn end(&self) -> RingCornerIndex {
+    pub fn end(&self) -> RingCornerIndex {
         TryInto::<RingCornerIndex>::try_into((self.0 + 1) % 6).unwrap()
     }
 
     /// Returns a RingCornerIndex that signifies the edge direction. E.g. the edge going towards the top-left would return the top-left corner.
-    fn direction(&self) -> RingCornerIndex {
+    pub fn direction(&self) -> RingCornerIndex {
         self.end().next()
     }
 
     /// Transforms two distinct corners into an edge.
     /// Not defined for just one corner.
-    fn from_corners<'a>(mut a: &'a RingCornerIndex, mut b: &'a RingCornerIndex) -> Self {
+    pub fn from_corners<'a>(mut a: &'a RingCornerIndex, mut b: &'a RingCornerIndex) -> Self {
         assert_ne!(a, b);
         let a_val: u8 = (*a).into();
         let b_val: u8 = (*b).into();
@@ -219,13 +219,13 @@ impl RingEdge {
         }
     }
 
-    fn from_primitive(p: u8) -> Self {
+    pub fn from_primitive(p: u8) -> Self {
         Self((p % 6))
     }
 }
 
 impl RingCornerIndex {
-    fn next(&self) -> Self {
+    pub fn next(&self) -> Self {
         let v = *self as u8;
         let v2 = match v {
             0..=4 => v + 1,
@@ -235,13 +235,13 @@ impl RingCornerIndex {
         TryInto::<RingCornerIndex>::try_into(v2).unwrap()
     }
 
-    fn all() -> impl std::iter::Iterator<Item = RingCornerIndex> {
+    pub fn all() -> impl std::iter::Iterator<Item = RingCornerIndex> {
         Self::all_from(&Self::RIGHT)
     }
 
     // See https://blog.rust-lang.org/2024/10/17/Rust-1.82.0.html
     // the "Precise captures use" section.
-    fn all_from(
+    pub fn all_from(
         start: &RingCornerIndex,
     ) -> impl std::iter::Iterator<Item = RingCornerIndex> + use<'_> {
         let mut ctr = start.clone();
@@ -301,24 +301,24 @@ impl HGSTile {
 }
 
 impl Ring {
-    fn new(ring_index: RingIndex) -> Self {
+    pub fn new(ring_index: RingIndex) -> Self {
         Ring { n: ring_index }
     }
 
-    fn from_tile_index(tile_index: &TileIndex) -> Self {
+    pub fn from_tile_index(tile_index: &TileIndex) -> Self {
         Ring::new(ring_index_for_tile_index(*tile_index))
     }
 
-    fn next_ring(&self) -> Ring {
+    pub fn next_ring(&self) -> Ring {
         Ring { n: self.n + 1 }
     }
 
-    fn prev_ring(&self) -> Ring {
+    pub fn prev_ring(&self) -> Ring {
         assert!(self.n.value() > 0, "Cannot decrement the innermost circle.");
         Ring { n: self.n - 1 }
     }
 
-    fn neighbors_in_ring(&self, tile: &HGSTile) -> Vec<HGSTile> {
+    pub fn neighbors_in_ring(&self, tile: &HGSTile) -> Vec<HGSTile> {
         // in most cases, they are simply one up and down the tile index.
         // The exception is the case where it is the maximum or minimum entry.
         let base = ring_min(self.n);
@@ -329,24 +329,24 @@ impl Ring {
         return vec![lesser_neighbor, greater_neighbor];
     }
 
-    fn full_edge_size(&self) -> u64 {
+    pub fn full_edge_size(&self) -> u64 {
         return self.n.value();
     }
 
-    fn size(&self) -> u64 {
+    pub fn size(&self) -> u64 {
         return ring_size(self.n);
     }
 
-    fn min(&self) -> TileIndex {
+    pub fn min(&self) -> TileIndex {
         return ring_min(self.n);
     }
 
-    fn max(&self) -> TileIndex {
+    pub fn max(&self) -> TileIndex {
         return ring_max(self.n);
     }
 
     /// Edge index on the ring where the Tile h resides in.
-    fn edge(&self, h: TileIndex) -> RingEdge {
+    pub fn edge(&self, h: TileIndex) -> RingEdge {
         assert!(!h.is_origin());
         // The ring-minimum has offset 1
         // The ring-maximum has offset 0.
@@ -363,12 +363,12 @@ impl Ring {
         return RingEdge::from_primitive((offset / side_size).try_into().unwrap());
     }
 
-    fn edge_size(&self) -> u64 {
+    pub fn edge_size(&self) -> u64 {
         self.full_edge_size() - 1
     }
 
     /// Get the c-th corner of the ring as tile index.
-    fn corner(&self, c: RingCornerIndex) -> TileIndex {
+    pub fn corner(&self, c: RingCornerIndex) -> TileIndex {
         let val: u8 = c.into();
         // The start of the edge i is the corner at index i.
         if val == 0 {
@@ -380,7 +380,7 @@ impl Ring {
         return self.min() + self.edge_size() * (val as u64) - 1;
     }
 
-    fn random_tile_in_ring<RNG: rand::Rng>(&self, rng: &mut RNG) -> TileIndex {
+    pub fn random_tile_in_ring<RNG: rand::Rng>(&self, rng: &mut RNG) -> TileIndex {
         TileIndex(rng.gen_range(self.min().value()..=self.max().value()))
     }
 }
@@ -431,21 +431,21 @@ fn ring_min(n: RingIndex) -> TileIndex {
 }
 
 impl CCTile {
-    fn origin() -> CCTile {
+    pub fn origin() -> CCTile {
         CCTile::from_qrs(0, 0, 0)
     }
-    fn from_qrs(q: i64, r: i64, s: i64) -> CCTile {
+    pub fn from_qrs(q: i64, r: i64, s: i64) -> CCTile {
         assert_eq!(q + r + s, 0);
         CCTile { q, r, s }
     }
-    fn from_qr(q: i64, r: i64) -> CCTile {
+    pub fn from_qr(q: i64, r: i64) -> CCTile {
         CCTile::from_qrs(q, r, 0 - q - r)
     }
-    fn from_qrs_tuple(t: (i64, i64, i64)) -> CCTile {
+    pub fn from_qrs_tuple(t: (i64, i64, i64)) -> CCTile {
         CCTile::from_qrs(t.0, t.1, t.2)
     }
 
-    fn unit(direction: &RingCornerIndex) -> CCTile {
+    pub fn unit(direction: &RingCornerIndex) -> CCTile {
         CCTile::from_qrs_tuple(match direction {
             RingCornerIndex::RIGHT => (1, 0, -1),
             RingCornerIndex::TOPRIGHT => (1, -1, 0),
@@ -462,7 +462,7 @@ impl CCTile {
     /// https://www.researchgate.net/publication/235779843_Storage_and_addressing_scheme_for_practical_hexagonal_image_processing
     /// DOII https://doi.org/10.1117/1.JEI.22.1.010502
     /// TODO: Test that norm_li, norm_redblob, and norm_redblob_max are all equivalent?
-    fn norm_li(&self) -> i64 {
+    pub fn norm_li(&self) -> i64 {
         self.q * self.q + self.r * self.r + self.q * self.r
     }
 
@@ -480,7 +480,7 @@ impl CCTile {
     /// ` (abs(q) + abs(r) + abs(s)) / 2`
     /// because we know that `q+r+s == 0` and we also know that two of the three coordinates must be of the same sign (pigeonhole principle). That means the third must be in absolute value as big as the two of the same sign. So the maximal abs is equivalent to the above.. qed.
     // TODO: Test this.
-    fn norm_steps(&self) -> u64 {
+    pub fn norm_steps(&self) -> u64 {
         let result = [self.q, self.r, self.s]
             .iter()
             .map(|coord| coord.abs() as u64)
@@ -491,11 +491,11 @@ impl CCTile {
     }
 
     /// Distance in discrete steps on the hexagonal grid.
-    fn grid_distance_to(&self, other: &CCTile) -> u64 {
+    pub fn grid_distance_to(&self, other: &CCTile) -> u64 {
         (*self - *other).norm_steps()
     }
 
-    fn is_origin_tile(&self) -> bool {
+    pub fn is_origin_tile(&self) -> bool {
         self.q == 0 && self.r == 0 && self.s == 0
     }
 
@@ -506,7 +506,7 @@ impl CCTile {
     /// If so, the two wedges are sorted that the first is right before the second in counter-clockwise rotation.
     /// Returns no wedges if the tile is the origin.
     // TODO: Test this
-    fn wedge_around_ringcorner(&self) -> Vec<RingCornerIndex> {
+    pub fn wedge_around_ringcorner(&self) -> Vec<RingCornerIndex> {
         // > Hex grids have six primary directions.
         // > Look at the max of |s-q|, |r-s|, |q-r|, and it will tell you which wedge you're in.
         // For the maximum, in `|a-b|` the `a` and `b` have opposite signs (except at 0,0,0).
@@ -565,7 +565,7 @@ impl CCTile {
     // The previous ring-corner in ccw direction (or the next corner in clockwise direction)
     // Might be this tile itself.
     // TODO: Test
-    fn previous_corner_hgs(&self) -> HGSTile {
+    pub fn previous_corner_hgs(&self) -> HGSTile {
         assert!(!self.is_origin_tile());
         // get corner index
         let w = self.wedge_around_ringcorner()[0];
@@ -577,7 +577,7 @@ impl CCTile {
     // The previous ring-corner in ccw direction (or the next corner in clockwise direction)
     // Might be this tile itself.
     // TODO: Test
-    fn previous_corner_cc(&self) -> CCTile {
+    pub fn previous_corner_cc(&self) -> CCTile {
         assert!(!self.is_origin_tile());
         // get corner index
         let w = self.wedge_around_ringcorner()[0];
@@ -590,12 +590,12 @@ impl CCTile {
     /// Rotate 60 degrees counter-clockwise
     /// To rotate by other amounts, consider using spiral steps in HGSTile notation.
     /// https://www.redblobgames.com/grids/hexagons/#rotation
-    fn rot60ccw(&self) -> CCTile {
+    pub fn rot60ccw(&self) -> CCTile {
         CCTile::from_qrs(-self.s, -self.q, -self.r)
     }
     /// Rotate 60 degrees clockwise
     /// https://www.redblobgames.com/grids/hexagons/#rotation
-    fn rot60cw(&self) -> CCTile {
+    pub fn rot60cw(&self) -> CCTile {
         CCTile::from_qrs(-self.r, -self.s, -self.q)
     }
 
@@ -605,7 +605,7 @@ impl CCTile {
     // TODO: Implement CC to Cartesian2D
     // https://www.redblobgames.com/grids/hexagons/#hex-to-pixel
 
-    fn spiral_steps(&self, steps: i64) -> Self {
+    pub fn spiral_steps(&self, steps: i64) -> Self {
         let ht: HGSTile = (*self).into();
         let ht2 = ht.spiral_steps(steps);
         ht2.into()
@@ -678,7 +678,7 @@ impl From<CCTile> for HGSTile {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::hexgridspiral::RingCornerIndex::BOTTOMLEFT;
+    use crate::RingCornerIndex::BOTTOMLEFT;
     use rand::thread_rng;
 
     #[test]
