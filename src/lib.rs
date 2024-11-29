@@ -10,8 +10,6 @@
 #![feature(iter_chain)]
 #![feature(step_trait)]
 
-// TODO: public re-exports?
-
 // The objects Tile, Ring, TileIndex, RingIndex are not supposed to be mutated.
 // Instead, (they) make new objects.
 use derive_more::{Add, Display, From, Into, Mul, Neg, Sub};
@@ -293,7 +291,12 @@ impl HGSTile {
         HGSTile::new(self.ring.max())
     }
 
-    /// Not well-defined for the origin-tile
+    pub fn ring_min(&self) -> Self {
+        HGSTile::new(self.ring.min())
+    }
+
+    /// Edge-index on the ring, where the tile resides.
+    /// Not well-defined for the origin-tile.
     pub fn ring_edge(&self) -> RingEdge {
         self.ring.edge(self.h)
     }
@@ -381,6 +384,11 @@ impl Ring {
 
     pub fn random_tile_in_ring<RNG: rand::Rng>(&self, rng: &mut RNG) -> TileIndex {
         TileIndex(rng.gen_range(self.min().value()..=self.max().value()))
+    }
+
+    /// Like `ring.n` but counts from zero. I.e. the Origin-Tile is in the ring 1, which has radius 0.
+    pub fn radius(&self)->u64{
+        (self.n - RingIndex::ORIGIN_RING).value()
     }
 }
 
@@ -612,7 +620,7 @@ impl CCTile {
 }
 
 // Conversion from HexGridSpiral to Cube Coordinates:
-// We can easily get the ring_max. From there we jump to the next corner at most five times.
+// We can easily get the previous corner.
 // Then add the rest.
 // TODO: Test this.
 impl From<HGSTile> for CCTile {
@@ -620,17 +628,21 @@ impl From<HGSTile> for CCTile {
         if item.is_origin_tile() {
             return CCTile::origin();
         }
-        let max_hgs = item.ring_max();
-        let edge_section = max_hgs.ring_edge();
+        let edge_section = item.ring_edge();
         let corner_index = edge_section.start();
         // Find the previous corner in Cube Coordinates
         // This part is straightforward because it's simply moving along an axis
         let cc_axis_unit = CCTile::unit(&corner_index);
-        let cc_edge_start = cc_axis_unit * (item.ring.n.value() as i64);
+        let cc_edge_start = cc_axis_unit * (item.ring.radius() as i64);
         // Then make steps in the edge direction
         let cc_edge_unit = CCTile::unit(&edge_section.direction());
         let corner_h = item.ring.corner(corner_index);
-        assert!(corner_h <= item.h);
+        if(corner_h > item.h){
+            // corner_h is the maximum in the ring.
+            let fake_corner_h = corner_h - item.ring.size();
+            let steps_from_corner = item.h - fake_corner_h;
+            return cc_edge_start + cc_edge_unit * (steps_from_corner.value() as i64);
+        }
         let steps_from_corner = item.h - corner_h;
         return cc_edge_start + cc_edge_unit * (steps_from_corner.value() as i64);
     }
@@ -648,7 +660,7 @@ impl From<CCTile> for HGSTile {
     fn from(item: CCTile) -> Self {
         let ring = Ring::from(item);
         let ring_index = ring.n;
-        if ring.n == RingIndex(1) {
+        if ring.n == RingIndex::ORIGIN_RING {
             return HGSTile::new(TileIndex(0));
         }
         assert!(
@@ -1031,9 +1043,9 @@ mod test {
         for r in RingCornerIndex::all_from(&RingCornerIndex::BOTTOMLEFT) {
             i += 1;
             let t = CCTile::unit(&r) * i;
-            let q = CCTile::unit(&r.next());
-            assert_eq!(t.rot60cw(), q);
-            assert_eq!(q.rot60ccw(), t);
+            let q = CCTile::unit(&r.next()) * i;
+            assert_eq!(t.rot60ccw(), q);
+            assert_eq!(q.rot60cw(), t);
         }
 
         // Also test some not-corner tiles
