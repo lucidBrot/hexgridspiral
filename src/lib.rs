@@ -264,6 +264,11 @@ impl HGSTile {
         };
     }
 
+    /// Shorthand for creating a tile in HexGridSpiral format with TileIndex(n).
+    pub fn make(tile_index: u64)->Self{
+        HGSTile::new(TileIndex(tile_index))
+    }
+
     pub fn is_origin_tile(&self) -> bool {
         self.h == TileIndex(0)
     }
@@ -438,6 +443,14 @@ fn ring_min(n: RingIndex) -> TileIndex {
 }
 
 impl CCTile {
+    pub fn new(tile_index: TileIndex) -> Self {
+        HGSTile::new(tile_index).into()
+    }
+
+    pub fn make(tile_index: u64) -> Self {
+        HGSTile::make(tile_index).into()
+    }
+
     pub fn origin() -> CCTile {
         CCTile::from_qrs(0, 0, 0)
     }
@@ -451,6 +464,8 @@ impl CCTile {
     pub fn from_qrs_tuple(t: (i64, i64, i64)) -> CCTile {
         CCTile::from_qrs(t.0, t.1, t.2)
     }
+
+    pub fn into_qrs_tuple(&self) -> (i64, i64, i64) {(self.q, self.r, self.s)}
 
     pub fn unit(direction: &RingCornerIndex) -> CCTile {
         CCTile::from_qrs_tuple(match direction {
@@ -468,8 +483,9 @@ impl CCTile {
     ///
     /// https://www.researchgate.net/publication/235779843_Storage_and_addressing_scheme_for_practical_hexagonal_image_processing
     /// DOII https://doi.org/10.1117/1.JEI.22.1.010502
-    /// TODO: Test that norm_li, norm_redblob, and norm_redblob_max are all equivalent?
-    pub fn norm_li(&self) -> i64 {
+    ///
+    /// I did not yet open this link, but it's probably what you get when you splat the 3D-embedding cartesian coordinates to the 2D-plane.
+    pub fn norm_euclidean(&self) -> i64 {
         self.q * self.q + self.r * self.r + self.q * self.r
     }
 
@@ -500,6 +516,10 @@ impl CCTile {
     /// Distance in discrete steps on the hexagonal grid.
     pub fn grid_distance_to(&self, other: &CCTile) -> u64 {
         (*self - *other).norm_steps()
+    }
+
+    pub fn euclidean_distance_to(&self, other: &CCTile) -> i64 {
+        (*self - *other).norm_euclidean()
     }
 
     pub fn is_origin_tile(&self) -> bool {
@@ -617,6 +637,22 @@ impl CCTile {
         let ht2 = ht.spiral_steps(steps);
         ht2.into()
     }
+
+    /// computes the coordinates in the plane as floats.
+    /// * `unit_step` : The size of one step from a hex tile's center to its neighboring tile's center.
+    /// The `unit_step` is twice the incircle radius of the hex. Or `sqrt(3) * outcircle_radius`.
+    pub fn to_pixel(&self, origin: (f64,f64), unit_step: f64) -> (f64, f64){
+        let redblob_size = unit_step / f64::sqrt(3.);
+        // Walk both unit vectors.
+        // Math according to https://www.redblobgames.com/grids/hexagons/#hex-to-pixel-axial
+        // the unit vectors are (x = sqrt(3), y = 0) and ( x= sqrt(3)/2, y=3/2)
+        // corresponding to q and r vectors.
+        let x = redblob_size * f64::sqrt(3.) *(( self.q as f64) + (self.r as f64) / 2.);
+        let y = redblob_size * 3. / 2. * (self.r as f64);
+        return (origin.0 + x, origin.1 + y);
+    }
+
+    // TODO: pub fn from_pixel()
 }
 
 // Conversion from HexGridSpiral to Cube Coordinates:
@@ -637,7 +673,7 @@ impl From<HGSTile> for CCTile {
         // Then make steps in the edge direction
         let cc_edge_unit = CCTile::unit(&edge_section.direction());
         let corner_h = item.ring.corner(corner_index);
-        if(corner_h > item.h){
+        if corner_h > item.h {
             // corner_h is the maximum in the ring.
             let fake_corner_h = corner_h - item.ring.size();
             let steps_from_corner = item.h - fake_corner_h;
@@ -686,11 +722,10 @@ impl From<CCTile> for HGSTile {
     }
 }
 
+
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::RingCornerIndex::BOTTOMLEFT;
-    use rand::thread_rng;
 
     #[test]
     fn test_multiplication_with_unit() {
@@ -704,15 +739,13 @@ mod test {
     #[test]
     fn test_hexgridspiral_cc_conversion() {
         let origin = CCTile::from_qr(0, 0);
-        let H0: HGSTile = origin.into();
-        let h0 = H0.h;
+        let tile0: HGSTile = origin.into();
+        let h0 = tile0.h;
         assert_eq!(h0, TileIndex(0));
 
         let o_cc: CCTile = CCTile::from(HGSTile::new(h0));
         // TODO: implement this test for other tiles than origin.
     }
-
-    // TODO: Debug these tests. add a test for the ring min and max.
 
     #[test]
     fn test_hexcount_steps_from_zero() {
@@ -847,7 +880,7 @@ mod test {
         let tile = CCTile::from_qrs(1, 3, -4);
         let rci_vec = tile.wedge_around_ringcorner();
         assert_eq!(rci_vec.len(), 1);
-        let mut rci = rci_vec[0];
+        let rci = rci_vec[0];
         assert_eq!(rci, RingCornerIndex::BOTTOMRIGHT);
     }
 
@@ -1056,4 +1089,38 @@ mod test {
             assert_eq!(a, b);
         }
     }
+
+    #[test]
+    fn test_euclidean_distance(){
+        let tile0 = HGSTile::make(0);
+        let tile1 = CCTile::unit(&RingCornerIndex::RIGHT);
+        assert_eq!(tile1.euclidean_distance_to(&Into::<CCTile>::into(tile0)), 1);
+
+        let tile2 = CCTile::unit(&RingCornerIndex::TOPRIGHT);
+        assert_eq!(tile1.euclidean_distance_to(&tile1), 0);
+        assert_eq!(tile1.euclidean_distance_to(&tile2), 1);
+        assert_eq!(tile2.euclidean_distance_to(&tile1), 1);
+
+        let tile7: CCTile = HGSTile::make(7).into();
+        let tileo : CCTile = CCTile::origin();
+        assert_eq!(tile7.euclidean_distance_to(&tile1), 1);
+        assert_eq!(tile7.euclidean_distance_to(&tileo), 3);
+
+        let tile8 = CCTile::make(8);
+        assert_eq!(tile8.euclidean_distance_to(&tileo), 4);
+        assert_eq!(tile8.euclidean_distance_to(&tile7), 1);
+
+        let tile_minus_8 = tile8 * (-1);
+        assert_eq!(tile8.norm_euclidean(), tile_minus_8.norm_euclidean());
+        assert_eq!(tile8.euclidean_distance_to(&tile_minus_8), 2 * tile8.norm_euclidean());
+        // TODO: Did I misunderstand what Li's paper is about?
+    }
+
+    #[test]
+    fn test_conversion_to_pixel(){
+        let tile1_cc = CCTile::unit(&RingCornerIndex::RIGHT);
+        let tile1_px = tile1_cc.to_pixel((0.,0.), 1.);
+        assert_eq!(tile1_px, (1., 0.));
+    }
+
 }
