@@ -128,6 +128,10 @@ impl ops::Sub<u64> for RingIndex {
     }
 }
 
+/// A Ring is hexagonal and consists of tiles.
+/// All Ring-Corner Tiles have the same number of steps to the origin.
+/// The other tiles in the Ring are on straight edges between corners.
+/// The [RingIndex] counts from 1 and thus is always equal to the [Ring::edg
 #[derive(Debug, Copy, Clone, PartialEq, Add, Display, From, Into)]
 pub struct Ring {
     /// ring-index
@@ -135,6 +139,8 @@ pub struct Ring {
 }
 
 /// Hexgrid Spiral Tile
+///
+/// Identified by a single integer index ([TileIndex]) that spirals around the origin.
 #[derive(Debug, Copy, Clone, PartialEq, Display, From, Into)]
 #[display("HGSTile: {h}")]
 pub struct HGSTile {
@@ -144,7 +150,7 @@ pub struct HGSTile {
 }
 
 /// CubeCoordinates Tile
-/// For reference: https://www.redblobgames.com/grids/hexagons/
+/// For reference: <https://www.redblobgames.com/grids/hexagons/>
 ///
 /// `r` is constant 0 along the x-Axis (towards right) while `q` increments and `s` decrements.
 ///
@@ -336,6 +342,7 @@ impl Ring {
         return vec![lesser_neighbor, greater_neighbor];
     }
 
+    /// Edge size of the [Ring], counting both ends (Ring corners).
     pub fn full_edge_size(&self) -> u64 {
         return self.n.value();
     }
@@ -370,6 +377,7 @@ impl Ring {
         return RingEdge::from_primitive((offset / side_size).try_into().unwrap());
     }
 
+    /// Length of the edge of the ring, counting only one corner.
     pub fn edge_size(&self) -> u64 {
         self.full_edge_size() - 1
     }
@@ -481,8 +489,8 @@ impl CCTile {
     /// Adapted Euclidean Distance by
     /// Xiangguo Li
     ///
-    /// https://www.researchgate.net/publication/235779843_Storage_and_addressing_scheme_for_practical_hexagonal_image_processing
-    /// DOI https://doi.org/10.1117/1.JEI.22.1.010502
+    /// <https://www.researchgate.net/publication/235779843_Storage_and_addressing_scheme_for_practical_hexagonal_image_processing>
+    /// DOI <https://doi.org/10.1117/1.JEI.22.1.010502>
     ///
     /// I did not read much of the paper, but it's probably what you get when you splat the 3D-embedding cartesian coordinates to the 2D-plane.
     pub fn norm_euclidean(&self) -> f64 {
@@ -499,7 +507,7 @@ impl CCTile {
 
     /// The distance between this tile and the origin, in discrete steps.
     ///
-    /// The blogpost https://www.redblobgames.com/grids/hexagons/#distances-cube
+    /// The blogpost <https://www.redblobgames.com/grids/hexagons/#distances-cube>
     /// explains this theoretically.
     /// Much easier is to observe:
     ///
@@ -530,8 +538,7 @@ impl CCTile {
     pub fn euclidean_distance_sq(&self, other: &CCTile) -> i64 {
         let dq = self.q - other.q;
         let dr = self.r - other.r;
-        // TODO: Understand why Li uses "- dq * dr" in Eq. 9 while redblob uses + dq*dr
-        let li = dq * dq + dr * dr - dq * dr;
+        // let _li = dq * dq + dr * dr - dq * dr;
         let redblob = dq * dq + dr * dr + dq * dr;
         redblob
     }
@@ -543,12 +550,29 @@ impl CCTile {
     /// distance(a, b) := (a.q - b.q) ** 2 + (a.r - b.r) ** 2 + (a.q - b.q)(a.r - b.r)
     /// $$
     ///
-    /// https://www.researchgate.net/publication/235779843_Storage_and_addressing_scheme_for_practical_hexagonal_image_processing
-    /// DOI https://doi.org/10.1117/1.JEI.22.1.010502
+    /// <https://www.researchgate.net/publication/235779843_Storage_and_addressing_scheme_for_practical_hexagonal_image_processing>
+    /// DOI <https://doi.org/10.1117/1.JEI.22.1.010502>
     /// Equation 9 in section 3.3.
     ///
-    /// Adaptation: https://www.redblobgames.com/grids/hexagons/#distances-cube
+    /// Adaptation: <https://www.redblobgames.com/grids/hexagons/#distances-cube>
     ///
+    /// Li uses "- dq * dr" in Eq. 9 while redblob uses + dq*dr.
+    /// This is because the neighbors around (0,0) in Li 2013 are enumerated as
+    /// `(0,1), (1, 1), (1, 0), (0, -1), (-1, -1), (-1, 0)`
+    /// We (and redblob) use instead a numbering that sums to zero or one (in the first ring), never to two.
+    /// `(0,-1), (1, -1), (1, 0), (0, 1), (-1, 1), (-1, 0)`
+    /// It is evident that flipping our `r` axis' sign makes them equivalent.
+    /// The sign flip does not matter in the squares, but propagates to the sign of `dr`.
+    /// Hence we compute
+    /// ```
+    /// # let (dq, dr) = (1, 1);
+    /// let redblob = dq * dq + dr * dr + dq * dr;
+    /// ```
+    /// instead of
+    /// ```
+    /// # let (dq, dr) = (1, 1);
+    /// let _li = dq * dq + dr * dr - dq * dr;
+    /// ```
     pub fn euclidean_distance_to(&self, other: &CCTile) -> f64 {
         f64::sqrt(self.euclidean_distance_sq(other) as f64)
     }
@@ -558,7 +582,7 @@ impl CCTile {
     }
 
     /// Which wedge of the grid the current tile is in.
-    /// The wedges are defined as in https://www.redblobgames.com/grids/hexagons/directions.html in the first diagram.
+    /// The wedges are defined as in <https://www.redblobgames.com/grids/hexagons/directions.html> in the first diagram.
     /// That is that the wedge borders go through the corners of the origin-tile, not through the corners of the HGS rings.
     /// Returns a second wedge if there are two wedges because the tile lies on their border.
     /// If so, the two wedges are sorted that the first is right before the second in counter-clockwise rotation.
@@ -647,12 +671,12 @@ impl CCTile {
 
     /// Rotate 60 degrees counter-clockwise
     /// To rotate by other amounts, consider using spiral steps in HGSTile notation.
-    /// https://www.redblobgames.com/grids/hexagons/#rotation
+    /// <https://www.redblobgames.com/grids/hexagons/#rotation>
     pub fn rot60ccw(&self) -> CCTile {
         CCTile::from_qrs(-self.s, -self.q, -self.r)
     }
     /// Rotate 60 degrees clockwise
-    /// https://www.redblobgames.com/grids/hexagons/#rotation
+    /// <https://www.redblobgames.com/grids/hexagons/#rotation>
     pub fn rot60cw(&self) -> CCTile {
         CCTile::from_qrs(-self.r, -self.s, -self.q)
     }
