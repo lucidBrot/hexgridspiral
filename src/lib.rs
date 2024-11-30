@@ -1175,6 +1175,7 @@ mod test {
         assert_eq!(norm_distance, 2. * norm8);
         // TODO: Did I misunderstand what Li's paper is about?
     }
+     // TODO: conversion FROM pixels?
 
     #[test]
     fn test_conversion_to_pixel(){
