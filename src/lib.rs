@@ -482,10 +482,18 @@ impl CCTile {
     /// Xiangguo Li
     ///
     /// https://www.researchgate.net/publication/235779843_Storage_and_addressing_scheme_for_practical_hexagonal_image_processing
-    /// DOII https://doi.org/10.1117/1.JEI.22.1.010502
+    /// DOI https://doi.org/10.1117/1.JEI.22.1.010502
     ///
-    /// I did not yet open this link, but it's probably what you get when you splat the 3D-embedding cartesian coordinates to the 2D-plane.
-    pub fn norm_euclidean(&self) -> i64 {
+    /// I did not read much of the paper, but it's probably what you get when you splat the 3D-embedding cartesian coordinates to the 2D-plane.
+    pub fn norm_euclidean(&self) -> f64 {
+        let li = Self::origin().euclidean_distance_to(self);
+        let redblob = f64::sqrt(self.norm_euclidean_sq() as f64);
+        // I don't think this makes sense... why should this be equal?
+        debug_assert_eq!(li, redblob as f64);
+        redblob
+    }
+
+    pub fn norm_euclidean_sq(&self) -> i64 {
         self.q * self.q + self.r * self.r + self.q * self.r
     }
 
@@ -518,8 +526,31 @@ impl CCTile {
         (*self - *other).norm_steps()
     }
 
-    pub fn euclidean_distance_to(&self, other: &CCTile) -> i64 {
-        (*self - *other).norm_euclidean()
+    /// Squared Euclidean Distance, see [Self::euclidean_distance_to]
+    pub fn euclidean_distance_sq(&self, other: &CCTile) -> i64 {
+        let dq = self.q - other.q;
+        let dr = self.r - other.r;
+        // TODO: Understand why Li uses "- dq * dr" in Eq. 9 while redblob uses + dq*dr
+        let li = dq * dq + dr * dr - dq * dr;
+        let redblob = dq * dq + dr * dr + dq * dr;
+        redblob
+    }
+
+    /// Euclidean Distance by Xiangguo Li
+    /// adapted by redblobgames
+    ///
+    /// $$
+    /// distance(a, b) := (a.q - b.q) ** 2 + (a.r - b.r) ** 2 + (a.q - b.q)(a.r - b.r)
+    /// $$
+    ///
+    /// https://www.researchgate.net/publication/235779843_Storage_and_addressing_scheme_for_practical_hexagonal_image_processing
+    /// DOI https://doi.org/10.1117/1.JEI.22.1.010502
+    /// Equation 9 in section 3.3.
+    ///
+    /// Adaptation: https://www.redblobgames.com/grids/hexagons/#distances-cube
+    ///
+    pub fn euclidean_distance_to(&self, other: &CCTile) -> f64 {
+        f64::sqrt(self.euclidean_distance_sq(other) as f64)
     }
 
     pub fn is_origin_tile(&self) -> bool {
@@ -641,6 +672,7 @@ impl CCTile {
     /// computes the coordinates in the plane as floats.
     /// * `unit_step` : The size of one step from a hex tile's center to its neighboring tile's center.
     /// The `unit_step` is twice the incircle radius of the hex. Or `sqrt(3) * outcircle_radius`.
+    /// * `origin` : The pixel position of the origin-tile's center.
     pub fn to_pixel(&self, origin: (f64,f64), unit_step: f64) -> (f64, f64){
         let redblob_size = unit_step / f64::sqrt(3.);
         // Walk both unit vectors.
@@ -1094,25 +1126,29 @@ mod test {
     fn test_euclidean_distance(){
         let tile0 = HGSTile::make(0);
         let tile1 = CCTile::unit(&RingCornerIndex::RIGHT);
-        assert_eq!(tile1.euclidean_distance_to(&Into::<CCTile>::into(tile0)), 1);
+        assert_eq!(tile1.euclidean_distance_to(&Into::<CCTile>::into(tile0)), 1.);
 
         let tile2 = CCTile::unit(&RingCornerIndex::TOPRIGHT);
-        assert_eq!(tile1.euclidean_distance_to(&tile1), 0);
-        assert_eq!(tile1.euclidean_distance_to(&tile2), 1);
-        assert_eq!(tile2.euclidean_distance_to(&tile1), 1);
+        assert_eq!(tile1.euclidean_distance_to(&tile1), 0.);
+        assert_eq!(tile1.euclidean_distance_to(&tile2), 1.);
+        assert_eq!(tile2.euclidean_distance_to(&tile1), 1.);
 
         let tile7: CCTile = HGSTile::make(7).into();
         let tileo : CCTile = CCTile::origin();
-        assert_eq!(tile7.euclidean_distance_to(&tile1), 1);
-        assert_eq!(tile7.euclidean_distance_to(&tileo), 3);
+        assert_eq!(tile7.euclidean_distance_to(&tile1), 1.);
+        assert_eq!(tile7.euclidean_distance_sq(&tileo), 3);
 
         let tile8 = CCTile::make(8);
-        assert_eq!(tile8.euclidean_distance_to(&tileo), 4);
-        assert_eq!(tile8.euclidean_distance_to(&tile7), 1);
+        assert_eq!(tile8.euclidean_distance_to(&tileo), 2.);
+        assert_eq!(tile8.euclidean_distance_to(&tile7), 1.);
 
         let tile_minus_8 = tile8 * (-1);
-        assert_eq!(tile8.norm_euclidean(), tile_minus_8.norm_euclidean());
-        assert_eq!(tile8.euclidean_distance_to(&tile_minus_8), 2 * tile8.norm_euclidean());
+        // this tile should have the same norm to the origin
+        let norm8 = tile8.norm_euclidean();
+        let norm8_minus = tile_minus_8.norm_euclidean();
+        assert_eq!(norm8, norm8_minus);
+        let norm_distance = tile8.euclidean_distance_to(&tile_minus_8);
+        assert_eq!(norm_distance, 2. * norm8);
         // TODO: Did I misunderstand what Li's paper is about?
     }
 
@@ -1121,6 +1157,9 @@ mod test {
         let tile1_cc = CCTile::unit(&RingCornerIndex::RIGHT);
         let tile1_px = tile1_cc.to_pixel((0.,0.), 1.);
         assert_eq!(tile1_px, (1., 0.));
+
+        let tile_right = tile1_cc * 5;
+        assert_eq!(tile_right.to_pixel((1.,2.), 1.), (6.,2.));
     }
 
 }
