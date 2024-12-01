@@ -274,7 +274,7 @@ impl HGSTile {
     }
 
     /// Shorthand for creating a tile in HexGridSpiral format with TileIndex(n).
-    pub fn make(tile_index: u64)->Self{
+    pub fn make(tile_index: u64) -> Self {
         HGSTile::new(TileIndex(tile_index))
     }
 
@@ -371,7 +371,7 @@ impl Ring {
         let ring = Ring::from_tile_index(&h);
         let side_size = ring.full_edge_size() - 1;
         assert!(h >= b);
-        let offset : u64 = (h - b).value();
+        let offset: u64 = (h - b).value();
         let ring_size = ring.size();
         assert!(
             offset < ring_size,
@@ -403,7 +403,7 @@ impl Ring {
     }
 
     /// Like `ring.n` but counts from zero. I.e. the Origin-Tile is in the ring 1, which has radius 0.
-    pub fn radius(&self)->u64{
+    pub fn radius(&self) -> u64 {
         (self.n - RingIndex::ORIGIN_RING).value()
     }
 }
@@ -476,7 +476,9 @@ impl CCTile {
         CCTile::from_qrs(t.0, t.1, t.2)
     }
 
-    pub fn into_qrs_tuple(&self) -> (i64, i64, i64) {(self.q, self.r, self.s)}
+    pub fn into_qrs_tuple(&self) -> (i64, i64, i64) {
+        (self.q, self.r, self.s)
+    }
 
     pub fn unit(direction: &RingCornerIndex) -> CCTile {
         CCTile::from_qrs_tuple(match direction {
@@ -700,25 +702,25 @@ impl CCTile {
     /// * `unit_step` : The size of one step from a hex tile's center to its neighboring tile's center.
     /// The `unit_step` is twice the incircle radius of the hex. Or `sqrt(3) * outcircle_radius`.
     /// * `origin` : The pixel position of the origin-tile's center.
-    pub fn to_pixel(&self, origin: (f64,f64), unit_step: f64) -> (f64, f64){
+    pub fn to_pixel(&self, origin: (f64, f64), unit_step: f64) -> (f64, f64) {
         let redblob_size = unit_step / f64::sqrt(3.);
         // Walk both unit vectors.
         // Math according to https://www.redblobgames.com/grids/hexagons/#hex-to-pixel-axial
         // the unit vectors are (x = sqrt(3), y = 0) and ( x= sqrt(3)/2, y=3/2)
         // corresponding to q and r vectors.
-        let x = redblob_size * f64::sqrt(3.) *(( self.q as f64) + (self.r as f64) / 2.);
+        let x = redblob_size * f64::sqrt(3.) * ((self.q as f64) + (self.r as f64) / 2.);
         let y = redblob_size * 3. / 2. * (self.r as f64);
         return (origin.0 + x, origin.1 + y);
     }
 
     pub fn from_pixel(pixel: (f64, f64)) -> Self {
-        let q = f64::sqrt(3.)/3. * pixel.0 - 1./3. * pixel.1;
-        let r = 2./3. *  pixel.1;
-        Self::round_to_nearest_tile(q,r)
+        let q = f64::sqrt(3.) / 3. * pixel.0 - 1. / 3. * pixel.1;
+        let r = 2. / 3. * pixel.1;
+        Self::round_to_nearest_tile(q, r)
     }
 
     // https://www.redblobgames.com/grids/hexagons/#rounding
-    pub fn round_to_nearest_tile(frac_q: f64,frac_r: f64) -> Self {
+    pub fn round_to_nearest_tile(frac_q: f64, frac_r: f64) -> Self {
         // infer s from the sum-to-zero constraint
         let frac_s: f64 = 0. - frac_q - frac_r;
         // round to nearest integer
@@ -732,13 +734,11 @@ impl CCTile {
         let s_diff = f64::abs(s - frac_s);
 
         // fix the largest error coordinate
-        if q_diff > r_diff && q_diff > s_diff{
-            q = -r-s
-        }
-        else if r_diff > s_diff {
+        if q_diff > r_diff && q_diff > s_diff {
+            q = -r - s
+        } else if r_diff > s_diff {
             r = -q - s
-        }
-        else {
+        } else {
             s = -q - r
         };
 
@@ -749,19 +749,20 @@ impl CCTile {
     /// Explained in <https://www.redblobgames.com/grids/hexagons/#range-coordinate> .
     pub fn movement_range(&self, steps: u64) -> MovementRange {
         let n: i64 = steps as i64;
-        MovementRange{
-            q_min : self.q - n,
-            q_max : self.q + n,
-            r_min : self.r - n,
-            r_max : self.r + n,
-            s_min : self.s - n,
+        MovementRange {
+            q_min: self.q - n,
+            q_max: self.q + n,
+            r_min: self.r - n,
+            r_max: self.r + n,
+            s_min: self.s - n,
             s_max: self.s + n,
         }
     }
 }
 
 /// <https://www.redblobgames.com/grids/hexagons/#range-coordinate>
-pub struct MovementRange{
+#[derive(Copy, Clone, Debug)]
+pub struct MovementRange {
     q_min: i64,
     q_max: i64,
     r_min: i64,
@@ -795,35 +796,36 @@ impl MovementRange {
     }
 }
 
-
 impl IntoIterator for MovementRange {
     type Item = CCTile;
-    type IntoIter = impl Iterator<Item=Self::Item>;
+    type IntoIter = impl Iterator<Item = Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
-        let it = std::iter::from_coroutine(#[coroutine] move ||{
-            // We would loop over all values of q, r, and s, but filter out the ones that do not satisfy
-            // our usual constraint ` q + r + s == 0`. This loop computes s to ensure this is fulfilled.
-            //
-            // We loop from min to max around our center... that would be from -N to +N. But then
-            // there are some tiles we accidentally cover.
-            // Along the axes, the value can deviate at most N from the center.
-            // But we know that the extreme value of r on the axis where q is constant will be larger than
-            // toward the top or bottom of our (hexagonal) range.
-            // So if q is smaller, r may be larger, otherwise not.
-            for q in (self.q_min)..=self.q_max {
-                // We loop from -N to N, so we only need to cover one side per iteration.
+        let it = std::iter::from_coroutine(
+            #[coroutine]
+            move || {
+                // We would loop over all values of q, r, and s, but filter out the ones that do not satisfy
+                // our usual constraint ` q + r + s == 0`. This loop computes s to ensure this is fulfilled.
+                //
+                // We loop from min to max around our center... that would be from -N to +N. But then
+                // there are some tiles we accidentally cover.
+                // Along the axes, the value can deviate at most N from the center.
+                // But we know that the extreme value of r on the axis where q is constant will be larger than
+                // toward the top or bottom of our (hexagonal) range.
+                // So if q is smaller, r may be larger, otherwise not.
+                for q in (self.q_min)..=self.q_max {
+                    // We loop from -N to N, so we only need to cover one side per iteration.
 
-                // choose the less extreme minimum
-                let r_min = i64::max(self.r_min, -q-self.s_max);
-                // choose the less extreme maximum
-                let r_max = i64::min(self.r_max, -q-self.s_min);
-                for r in r_min..=r_max {
-                    yield CCTile::from_qr(q,r);
+                    // choose the less extreme minimum
+                    let r_min = i64::max(self.r_min, -q - self.s_max);
+                    // choose the less extreme maximum
+                    let r_max = i64::min(self.r_max, -q - self.s_min);
+                    for r in r_min..=r_max {
+                        yield CCTile::from_qr(q, r);
+                    }
                 }
-            }
-
-        });
+            },
+        );
         it
     }
 }
@@ -895,7 +897,6 @@ impl From<CCTile> for HGSTile {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -917,7 +918,7 @@ mod test {
         assert_eq!(h0, TileIndex(0));
 
         let o_cc: CCTile = CCTile::from(HGSTile::make(9));
-        let nine = CCTile::from_qr(1,-2);
+        let nine = CCTile::from_qr(1, -2);
         assert_eq!(nine, o_cc);
     }
 
@@ -1265,10 +1266,13 @@ mod test {
     }
 
     #[test]
-    fn test_euclidean_distance(){
+    fn test_euclidean_distance() {
         let tile0 = HGSTile::make(0);
         let tile1 = CCTile::unit(&RingCornerIndex::RIGHT);
-        assert_eq!(tile1.euclidean_distance_to(&Into::<CCTile>::into(tile0)), 1.);
+        assert_eq!(
+            tile1.euclidean_distance_to(&Into::<CCTile>::into(tile0)),
+            1.
+        );
 
         let tile2 = CCTile::unit(&RingCornerIndex::TOPRIGHT);
         assert_eq!(tile1.euclidean_distance_to(&tile1), 0.);
@@ -1276,7 +1280,7 @@ mod test {
         assert_eq!(tile2.euclidean_distance_to(&tile1), 1.);
 
         let tile7: CCTile = HGSTile::make(7).into();
-        let tileo : CCTile = CCTile::origin();
+        let tileo: CCTile = CCTile::origin();
         assert_eq!(tile7.euclidean_distance_to(&tile1), 1.);
         assert_eq!(tile7.euclidean_distance_sq(&tileo), 3);
 
@@ -1294,18 +1298,18 @@ mod test {
     }
 
     #[test]
-    fn test_conversion_to_pixel(){
+    fn test_conversion_to_pixel() {
         let tile1_cc = CCTile::unit(&RingCornerIndex::RIGHT);
-        let tile1_px = tile1_cc.to_pixel((0.,0.), 1.);
+        let tile1_px = tile1_cc.to_pixel((0., 0.), 1.);
         assert_eq!(tile1_px, (1., 0.));
 
         let tile_right = tile1_cc * 5;
-        assert_eq!(tile_right.to_pixel((1.,2.), 1.), (6.,2.));
+        assert_eq!(tile_right.to_pixel((1., 2.), 1.), (6., 2.));
     }
 
     #[test]
-    fn test_conversion_from_pixel(){
-        let origin = (0.,0.);
+    fn test_conversion_from_pixel() {
+        let origin = (0., 0.);
         // TODO: What about other unit step sizes?
         let unit_step = 1.;
         for h in [0, 1, 2, 4, 5, 6, 7, 10, 27, 100] {
@@ -1316,6 +1320,29 @@ mod test {
         }
     }
 
-    // TODO: test the movement range.
+    // TODO: test the movement range generally.
+    // TODO: test movement range intersection
 
+    #[test]
+    fn test_movement_range() {
+        for h in [0, 1, 2, 4, 5, 6, 7, 10, 27, 100] {
+            let o = CCTile::make(h);
+            for max_steps in 0..10 {
+                let m = o.movement_range(max_steps);
+                // Everything in the range must be close enough.
+                for tile in m {
+                    assert!(tile.grid_distance_to(&o) <= max_steps);
+                }
+                // TODO: Everything close enough must be in the range.
+                // We check this by ensuring that the number of entries is correct.
+                let collected: Vec<CCTile> = m.into_iter().collect();
+                let num_tiles = collected.len() as u64;
+                // num_tiles should equal the number of differently-sized rings' tiles.
+                // `1 +  0 + 6 * 1 + 6 * 2 + ... + 6 * num_steps`
+                // which is equal to `6 * sum_from_0_to_num_steps`.
+                let s = 1 + 6 * ((0..=max_steps).sum::<u64>());
+                assert_eq!(s, num_tiles);
+            }
+        }
+    }
 }
