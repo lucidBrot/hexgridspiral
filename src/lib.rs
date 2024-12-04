@@ -703,13 +703,35 @@ impl CCTile {
     /// The `unit_step` is twice the incircle radius of the hex. Or `sqrt(3) * outcircle_radius`.
     /// * `origin` : The pixel position of the origin-tile's center.
     pub fn to_pixel(&self, origin: (f64, f64), unit_step: f64) -> (f64, f64) {
-        let redblob_size = unit_step / f64::sqrt(3.);
+        // We have point-top hexes. Call the hex inner-radius iR and the hex outer-radius oR.
+        // The width (aka iR) of a hex equals sqrt(3)/2 * height (aka oR).
+        // On the redblobgames website, they call the "size" what I'd call oR.
+        // On the x-axis, two centers are exactly 2*iR away.
+        // On the y-axis, they are not on the same x-coord, so it's different.
+        // There they are 3/4 * oR away from each other.
+        // iR is the distance from the center to an edge.
+        let iR = unit_step / 2.;
+        let oR = unit_step / f64::sqrt(3.);
+        let redblob_size = oR;
         // Walk both unit vectors.
         // Math according to https://www.redblobgames.com/grids/hexagons/#hex-to-pixel-axial
         // the unit vectors are (x = sqrt(3), y = 0) and ( x= sqrt(3)/2, y=3/2)
         // corresponding to q and r vectors.
-        let x = redblob_size * f64::sqrt(3.) * ((self.q as f64) + (self.r as f64) / 2.);
-        let y = redblob_size * 3. / 2. * (self.r as f64);
+
+        // One step of incrementing q is one step along the x-axis.
+        // But moving along the x-axis does not change r ... why does it contribute here?
+        // Because it matters: One step of incrementing r, given a fixed q. That is also half a step along the x axis.
+        let x = unit_step * ((self.q as f64) + (self.r as f64) / 2.);
+        // One step of incrementing q is half a step along the y axis.
+        // One step of incrementing r given a fixed q is some fraction of a step along the negative y axis.
+        // To compute the fraction, look at the triangle (hex1 center, hex2 center, y-axis).
+        // We know the hypotenuse (`c`) is unit_step long.
+        // And the x-axis is given above.
+        // Then y = sqrt(x^2 + c^2)
+        //let y = redblob_size * 3. / 2. * (self.r as f64);
+        let y = f64::sqrt(unit_step * unit_step + x * x);
+        //let y = redblob_size / 2. * (( self.q as f64) - (self.r as f64));
+        // TODO: test this.
         return (origin.0 + x, origin.1 + y);
     }
 
@@ -1312,7 +1334,19 @@ mod test {
         let origin = (0., 0.);
         // TODO: What about other unit step sizes?
         let unit_step = 1.;
-        for h in [0, 1, 2, 4, 5, 6, 7, 10, 27, 100] {
+
+        {
+            let h = TileIndex(7);
+            let tile = CCTile::new(h);
+            let expected_pixel_x = unit_step * 1.5;
+            let expected_pixel_y = unit_step * 1.;
+            let pixel = tile.to_pixel(origin, unit_step);
+            assert_eq!(pixel, (expected_pixel_x, expected_pixel_y));
+            let tile2 = CCTile::from_pixel(pixel);
+            assert_eq!(tile, tile2);
+        }
+
+        for h in [0, 1, 2, 4, 5, 6, 8, 10, 27, 100] {
             let tile = CCTile::make(h);
             let pixel = tile.to_pixel(origin, unit_step);
             let tile2 = CCTile::from_pixel(pixel);
@@ -1320,7 +1354,6 @@ mod test {
         }
     }
 
-    // TODO: test the movement range generally.
     // TODO: test movement range intersection
 
     #[test]
