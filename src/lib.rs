@@ -730,12 +730,13 @@ impl CCTile {
         // Then dy = sqrt(dx^2 + c^2)
 
         // mine:
-        let y = f64::sqrt(3.)/2.*oR*(-self.r as f64);
+        //let y = f64::sqrt(3.)/2.*oR*(-self.r as f64);
         // redblob:
-        //let y = redblob_size * 3. / 2. * (self.r as f64);
+        let y = redblob_size * 3. / 2. * (-self.r as f64);
         // TODO: Transcribe my manual notes p.43 - p. 45
-        // TODO: Contact redblobgames. I think the matrix-form equation _and_ the code above it are wrong in y. They should use sqrt(3), not 3.
         // TODO: Both variations pass my tests... need better tests. i.e. some where r is nonzero. .. but now my solution is wrong. where did my math go wrong? Are both solutions wrong?
+        // TODO: I think the matrix-form equation _and_ the code above it are wrong in y. They should use sqrt(3), not 3. But they are right and i am wrong. why?
+        // TODO: Document that y points up, not down.
         return (origin.0 + x, origin.1 + y);
     }
 
@@ -1339,9 +1340,9 @@ mod test {
         let tile2 = CCTile::unit(&RingCornerIndex::TOPLEFT);
         assert_eq!(tile2, CCTile::from_qr(0, -1));
         let tile2_px = tile2.to_pixel((0.,0.), 1.);
-        // 2 iR = sqrt(3) oR. And the edge equals iR. So y = oR + iR/2 = 2/sqrt(3) iR + 1/2 iR
-        let iR = 1./2.;
-        let y_should = iR * (2./f64::sqrt(3.) + 0.5);
+        let iR = 0.5;
+        let oR = 2./f64::sqrt(3.) * iR;
+        let y_should = 1.5 * oR;
         assert_eq!(tile2_px, (-0.5, y_should));
 
         // TODO: test with a tile where both q and r are relevant?
