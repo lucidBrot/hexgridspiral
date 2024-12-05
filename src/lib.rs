@@ -1334,14 +1334,14 @@ mod test {
         assert_eq!(tile_right.to_pixel((1., 2.), 1.), (6., 2.));
 
         // Same at larger scale:
-        assert_eq!(tile1_cc.to_pixel((0.,0.), 10000.), (10000., 0.));
+        assert_eq!(tile1_cc.to_pixel((0., 0.), 10000.), (10000., 0.));
 
         // Same with a tile that is not at r == 0:
         let tile2 = CCTile::unit(&RingCornerIndex::TOPLEFT);
         assert_eq!(tile2, CCTile::from_qr(0, -1));
-        let tile2_px = tile2.to_pixel((0.,0.), 1.);
+        let tile2_px = tile2.to_pixel((0., 0.), 1.);
         let iR = 0.5;
-        let oR = 2./f64::sqrt(3.) * iR;
+        let oR = 2. / f64::sqrt(3.) * iR;
         let y_should = 1.5 * oR;
         assert_eq!(tile2_px, (-0.5, y_should));
 
