@@ -728,11 +728,14 @@ impl CCTile {
         // We know the hypotenuse (`c`) is unit_step long.
         // And the x-axis is given above.
         // Then dy = sqrt(dx^2 + c^2)
-        let y = f64::sqrt(3.)/2.*oR*(self.r as f64);
-        //let y = redblob_size * 3. / 2. * (self.r as f64);
-        //let y = f64::sqrt(unit_step * unit_step + x * x);
+
+        // mine:
+        //let y = f64::sqrt(3.)/2.*oR*(-self.r as f64);
+        // redblob:
+        let y = redblob_size * 3. / 2. * (self.r as f64);
         // TODO: Transcribe my manual notes p.43 - p. 45
         // TODO: Contact redblobgames. I think the matrix-form equation _and_ the code above it are wrong in y. They should use sqrt(3), not 3.
+        // TODO: Both variations pass my tests... need better tests. i.e. some where r is nonzero. .. but now my solution is wrong. where did my math go wrong?
         return (origin.0 + x, origin.1 + y);
     }
 
@@ -1328,7 +1331,18 @@ mod test {
 
         let tile_right = tile1_cc * 5;
         assert_eq!(tile_right.to_pixel((1., 2.), 1.), (6., 2.));
+
+        // Same at larger scale:
+        assert_eq!(tile1_cc.to_pixel((0.,0.), 10000.), (10000., 0.));
+
+        // Same with a tile that is not at r == 0:
+        let tile2 = CCTile::unit(&RingCornerIndex::TOPLEFT);
+        assert_eq!(tile2, CCTile::from_qr(0, -1));
+        let tile2_px = tile2.to_pixel((0.,0.), 1.);
+        // 2 iR = sqrt(3) oR. And the edge equals iR. So y = 2*iR.
+        assert_eq!(tile2_px, (-0.5, f64::sqrt(3.)));
     }
+    // TODO: Write a test for spiral_steps from unit RIGHT
 
     #[test]
     fn test_conversion_from_pixel() {
