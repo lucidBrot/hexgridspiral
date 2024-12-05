@@ -727,11 +727,12 @@ impl CCTile {
         // To compute the fraction, look at the triangle (hex1 center, hex2 center, y-axis).
         // We know the hypotenuse (`c`) is unit_step long.
         // And the x-axis is given above.
-        // Then y = sqrt(x^2 + c^2)
+        // Then dy = sqrt(dx^2 + c^2)
+        let y = f64::sqrt(3.)/2.*oR*(self.r as f64);
         //let y = redblob_size * 3. / 2. * (self.r as f64);
-        let y = f64::sqrt(unit_step * unit_step + x * x);
-        //let y = redblob_size / 2. * (( self.q as f64) - (self.r as f64));
-        // TODO: test this.
+        //let y = f64::sqrt(unit_step * unit_step + x * x);
+        // TODO: Transcribe my manual notes p.43 - p. 45
+        // TODO: Contact redblobgames. I think the matrix-form equation _and_ the code above it are wrong in y. They should use sqrt(3), not 3.
         return (origin.0 + x, origin.1 + y);
     }
 
