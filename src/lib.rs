@@ -712,32 +712,46 @@ impl CCTile {
         // There they are 3/4 * oR away from each other.
         // iR is the distance from the center to an edge.
         let iR = unit_step / 2.;
+        // oR is the outer radius of the hex circumcircle; or the edge length.
+        // The unit_step is two times the height of a equilateral triangle, so
+        // unit_step = sqrt(3.)/2*oR*2
         let oR = unit_step / f64::sqrt(3.);
         let redblob_size = oR;
         // Walk both unit vectors.
         // Math according to https://www.redblobgames.com/grids/hexagons/#hex-to-pixel-axial
-        // the unit vectors are (x = sqrt(3), y = 0) and ( x= sqrt(3)/2, y=3/2)
-        // corresponding to q and r vectors.
+        // the unit vectors are, relative to the hex-edge length,
+        // q_unit := (x = sqrt(3), y = 0) and r_unit := ( x= sqrt(3)/2, y=-3/2)
+        // corresponding to q and r vectors from the origin tile to the next tile in pixels.
+        // TODO: Note that the y in the r_unit basis vector should be negative because I make y go upwards, not downwards. Should I?
 
+        // We can observe the following on an example or by looking at our unit vectors:
         // One step of incrementing q is one step along the x-axis.
         // But moving along the x-axis does not change r ... why does it contribute here?
         // Because it matters: One step of incrementing r, given a fixed q. That is also half a step along the x axis.
         let x = unit_step * ((self.q as f64) + (self.r as f64) / 2.);
-        // One step of incrementing q is half a step along the y axis.
+
+        // Expressing the basis vectors in terms of unit_step:
+        // One step of incrementing q given a fixed r is half a step along the y axis.
         // One step of incrementing r given a fixed q is some fraction of a step along the negative y axis.
         // To compute the fraction, look at the triangle (hex1 center, hex2 center, y-axis).
         // We know the hypotenuse (`c`) is unit_step long.
         // And the x-axis is given above.
         // Then dy = sqrt(dx^2 + c^2)
+        // Or, because this is in a equilateral triangle,
+        // the dy is the height thereof, so sqrt(3.)/2 * unit_step.
+        // mine2:
+        let y = 400. * f64::sqrt(3.)/2.*unit_step*(-self.r as f64);
 
         // mine:
         //let y = f64::sqrt(3.)/2.*oR*(-self.r as f64);
         // redblob:
-        let y = redblob_size * 3. / 2. * (-self.r as f64);
+        //let y = redblob_size * 3. / 2. * (-self.r as f64);
+        // TODO: Why would redblob use 3 instead of sqrt(3) here?
         // TODO: Transcribe my manual notes p.43 - p. 45
         // TODO: Both variations pass my tests... need better tests. i.e. some where r is nonzero. .. but now my solution is wrong. where did my math go wrong? Are both solutions wrong?
         // TODO: I think the matrix-form equation _and_ the code above it are wrong in y. They should use sqrt(3), not 3. But they are right and i am wrong. why?
         // TODO: Document that y points up, not down.
+        // TODO: Tell redblob that r should be negative in "Hex to pixel" computation of y?
         return (origin.0 + x, origin.1 + y);
     }
 
@@ -1344,8 +1358,11 @@ mod test {
         let iR = 0.5;
         let oR = 2. / f64::sqrt(3.) * iR;
         let y_should = 1.5 * oR;
-        assert_eq!(tile2_px, (-0.5, y_should));
+        approx_eq!(f64, tile2_px.0, -0.5);
+        approx_eq!(f64, tile2_px.1, y_should);
+        assert!(f64::abs(tile2_px.1 - y_should) < f64::EPSILON);
 
+        // TODO: How can it be that a factor sqrt(3) in to_pixel does not break this?
         // TODO: test with a tile where both q and r are relevant?
     }
     // TODO: Write a test for spiral_steps from unit RIGHT
@@ -1360,9 +1377,10 @@ mod test {
             let h = TileIndex(7);
             let tile = CCTile::new(h);
             let expected_pixel_x = unit_step * 1.5;
-            let expected_pixel_y = unit_step * 1.;
+            let expected_pixel_y = unit_step * f64::sqrt(3.)/2.;
             let pixel = tile.to_pixel(origin, unit_step);
-            assert_eq!(pixel, (expected_pixel_x, expected_pixel_y));
+            approx_eq!(f64, pixel.0, expected_pixel_x);
+            approx_eq!(f64, pixel.1, expected_pixel_y  );
             let tile2 = CCTile::from_pixel(pixel);
             assert_eq!(tile, tile2);
         }
@@ -1394,8 +1412,6 @@ mod test {
             let pixel = tile.to_pixel(origin, unit_step);
             approx_eq!(f64, pixel.0, 0.5);
             approx_eq!(f64, pixel.1, f64::sqrt(3.) / 2. * unit_step);
-            // TODO: CONTINUE HERE: Does this test pass?
-            // TODO: CONTINUE HERE: Did I use 1.5 elsewhere where i need sqrt(3)/2. instead?
         }
     }
 
