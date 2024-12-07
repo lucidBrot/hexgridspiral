@@ -757,9 +757,19 @@ impl CCTile {
         return (origin.0 + x, origin.1 + y);
     }
 
+    /// Wrapper around [CCTile::from_pixel_] with unit_step of size 1.
     pub fn from_pixel(pixel: (f64, f64)) -> Self {
-        let q = f64::sqrt(3.) / 3. * pixel.0 - 1. / 3. * pixel.1;
-        let r = 2. / 3. * pixel.1;
+        Self::from_pixel_(pixel, 1.)
+    }
+
+    /// Inversion of the formula in [CCTile::to_pixel] and rounding to the nearest hex tile.
+    /// `unit_step` determines the scaling - it is the distance between two adjacent hex tile centers, in pixel units.
+    pub fn from_pixel_(pixel: (f64, f64), unit_step: f64) -> Self {
+        // Based on to_pixel formulas:
+        // let x = unit_step * ((self.q as f64) + (self.r as f64) / 2.);
+        // let y = f64::sqrt(3.)/2.*unit_step*(-self.r as f64);
+        let r = -2. / f64::sqrt(3.) * pixel.1 / unit_step;
+        let q = pixel.0 / unit_step  - (r/2.);
         Self::round_to_nearest_tile(q, r)
     }
 
@@ -1343,6 +1353,14 @@ mod test {
 
     #[test]
     fn test_conversion_to_pixel() {
+        {
+            let tile1_cc = CCTile::make(1);
+            assert_eq!(tile1_cc, CCTile::from_qr(1, -1));
+            let tile1_px = tile1_cc.to_pixel((0., 0.), 1.);
+            assert_eq!(tile1_px, (0.5, f64::sqrt(3.)/2.));
+
+        }
+
         let tile1_cc = CCTile::unit(&RingCornerIndex::RIGHT);
         let tile1_px = tile1_cc.to_pixel((0., 0.), 1.);
         assert_eq!(tile1_px, (1., 0.));
@@ -1365,7 +1383,6 @@ mod test {
         // Sanity Check that the library is not always saying it's approximately equal
         assert!(f64::abs(tile2_px.1 - y_should) < f64::EPSILON*5.);
 
-        // TODO: How can it be that a factor sqrt(3) in to_pixel does not break this?
         // TODO: test with a tile where both q and r are relevant?
     }
     // TODO: Write a test for spiral_steps from unit RIGHT
@@ -1398,6 +1415,12 @@ mod test {
         {
             let tile = CCTile::make(0);
             assert_eq!(tile.to_pixel(origin, unit_step), (0., 0.));
+            assert_eq!(CCTile::from_pixel((0.,0.)), tile);
+        }
+
+        {
+            let tile1 = CCTile::make(1);
+            assert_eq!(CCTile::from_pixel((0.5, f64::sqrt(3.)/2.)), tile1);
         }
 
         // First-ring tile
