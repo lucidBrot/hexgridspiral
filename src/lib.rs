@@ -16,9 +16,9 @@
 // The objects Tile, Ring, TileIndex, RingIndex are not supposed to be mutated.
 // Instead, (they) make new objects.
 use derive_more::{Add, Display, From, Into, Mul, Neg, Sub};
+use float_cmp::approx_eq;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use std::ops;
-use float_cmp::{approx_eq};
 
 #[derive(
     Debug, Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Add, Sub, Mul, Display, From, Into,
@@ -929,7 +929,6 @@ impl From<CCTile> for HGSTile {
 mod test {
     use super::*;
 
-
     #[test]
     fn test_multiplication_with_unit() {
         let u = CCTile::unit(&RingCornerIndex::RIGHT);
@@ -1370,16 +1369,14 @@ mod test {
     }
 
     #[test]
-    fn test_conversion_from_pixel(){
+    fn test_conversion_from_pixel() {
         let origin = (0., 0.);
         let unit_step = 1.;
-
 
         // Origin should be at (0,0)
         {
             let tile = CCTile::make(0);
-            assert_eq!(tile.to_pixel(origin, unit_step),
-                       (0., 0.));
+            assert_eq!(tile.to_pixel(origin, unit_step), (0., 0.));
         }
 
         // First-ring tile
@@ -1393,16 +1390,13 @@ mod test {
         //   = sqrt(3)/2. * unit_step
         {
             let tile = CCTile::make(1);
-            assert_eq!(tile, CCTile::from_qr(1,-1));
+            assert_eq!(tile, CCTile::from_qr(1, -1));
             let pixel = tile.to_pixel(origin, unit_step);
             approx_eq!(f64, pixel.0, 0.5);
-            approx_eq!(f64,pixel.1,
-                 f64::sqrt(3.)/2. * unit_step);
+            approx_eq!(f64, pixel.1, f64::sqrt(3.) / 2. * unit_step);
             // TODO: CONTINUE HERE: Does this test pass?
             // TODO: CONTINUE HERE: Did I use 1.5 elsewhere where i need sqrt(3)/2. instead?
-
         }
-
     }
 
     #[test]
