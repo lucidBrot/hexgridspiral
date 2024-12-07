@@ -15,8 +15,8 @@
 
 // The objects Tile, Ring, TileIndex, RingIndex are not supposed to be mutated.
 // Instead, (they) make new objects.
-use derive_more::{Add, Display, From, Into, Mul, Neg, Sub};
 use approx_eq::assert_approx_eq;
+use derive_more::{Add, Display, From, Into, Mul, Neg, Sub};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use std::ops;
 
@@ -740,7 +740,7 @@ impl CCTile {
         // Or, because this is in a equilateral triangle,
         // the dy is the height thereof, so sqrt(3.)/2 * unit_step.
         // mine2:
-        let y = f64::sqrt(3.)/2.*unit_step*(-self.r as f64);
+        let y = f64::sqrt(3.) / 2. * unit_step * (-self.r as f64);
 
         // redblob: Equivalent to my "mine2" formula, because `redblob_size * sqrt(3) = unit_step`:
         // Unit_step is twice the height of the equilateral triangle spanned by two oR and an edge.
@@ -769,7 +769,7 @@ impl CCTile {
         // let x = unit_step * ((self.q as f64) + (self.r as f64) / 2.);
         // let y = f64::sqrt(3.)/2.*unit_step*(-self.r as f64);
         let r = -2. / f64::sqrt(3.) * pixel.1 / unit_step;
-        let q = pixel.0 / unit_step  - (r/2.);
+        let q = pixel.0 / unit_step - (r / 2.);
         Self::round_to_nearest_tile(q, r)
     }
 
@@ -1357,8 +1357,7 @@ mod test {
             let tile1_cc = CCTile::make(1);
             assert_eq!(tile1_cc, CCTile::from_qr(1, -1));
             let tile1_px = tile1_cc.to_pixel((0., 0.), 1.);
-            assert_eq!(tile1_px, (0.5, f64::sqrt(3.)/2.));
-
+            assert_eq!(tile1_px, (0.5, f64::sqrt(3.) / 2.));
         }
 
         let tile1_cc = CCTile::unit(&RingCornerIndex::RIGHT);
@@ -1381,7 +1380,7 @@ mod test {
         assert_approx_eq!(tile2_px.0, -0.5);
         assert_approx_eq!(tile2_px.1, y_should);
         // Sanity Check that the library is not always saying it's approximately equal
-        assert!(f64::abs(tile2_px.1 - y_should) < f64::EPSILON*5.);
+        assert!(f64::abs(tile2_px.1 - y_should) < f64::EPSILON * 5.);
 
         // TODO: test with a tile where both q and r are relevant?
     }
@@ -1397,10 +1396,10 @@ mod test {
             let h = TileIndex(7);
             let tile = CCTile::new(h);
             let expected_pixel_x = unit_step * 1.5;
-            let expected_pixel_y = unit_step * f64::sqrt(3.)/2.;
+            let expected_pixel_y = unit_step * f64::sqrt(3.) / 2.;
             let pixel = tile.to_pixel(origin, unit_step);
             assert_approx_eq!(pixel.0, expected_pixel_x);
-            assert_approx_eq!(pixel.1, expected_pixel_y  );
+            assert_approx_eq!(pixel.1, expected_pixel_y);
             let tile2 = CCTile::from_pixel(pixel);
             assert_eq!(tile, tile2);
         }
@@ -1415,12 +1414,12 @@ mod test {
         {
             let tile = CCTile::make(0);
             assert_eq!(tile.to_pixel(origin, unit_step), (0., 0.));
-            assert_eq!(CCTile::from_pixel((0.,0.)), tile);
+            assert_eq!(CCTile::from_pixel((0., 0.)), tile);
         }
 
         {
             let tile1 = CCTile::make(1);
-            assert_eq!(CCTile::from_pixel((0.5, f64::sqrt(3.)/2.)), tile1);
+            assert_eq!(CCTile::from_pixel((0.5, f64::sqrt(3.) / 2.)), tile1);
         }
 
         // First-ring tile
