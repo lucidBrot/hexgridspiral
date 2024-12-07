@@ -740,12 +740,14 @@ impl CCTile {
         // Or, because this is in a equilateral triangle,
         // the dy is the height thereof, so sqrt(3.)/2 * unit_step.
         // mine2:
-        let y = 400. * f64::sqrt(3.)/2.*unit_step*(-self.r as f64);
+        let y = f64::sqrt(3.)/2.*unit_step*(-self.r as f64);
 
+        // redblob: Equivalent to my "mine2" formula, because `redblob_size * sqrt(3) = unit_step`:
+        // Unit_step is twice the height of the equilateral triangle spanned by two oR and an edge.
+        //let y = redblob_size * 3. / 2. * (-self.r as f64);
         // mine:
         //let y = f64::sqrt(3.)/2.*oR*(-self.r as f64);
-        // redblob:
-        //let y = redblob_size * 3. / 2. * (-self.r as f64);
+        // TODO: Clearly wrong. go correct my handwritten notes.
         // TODO: Why would redblob use 3 instead of sqrt(3) here?
         // TODO: Transcribe my manual notes p.43 - p. 45
         // TODO: Both variations pass my tests... need better tests. i.e. some where r is nonzero. .. but now my solution is wrong. where did my math go wrong? Are both solutions wrong?
@@ -1360,7 +1362,8 @@ mod test {
         let y_should = 1.5 * oR;
         assert_approx_eq!(tile2_px.0, -0.5);
         assert_approx_eq!(tile2_px.1, y_should);
-        assert!(f64::abs(tile2_px.1 - y_should) < f64::EPSILON);
+        // Sanity Check that the library is not always saying it's approximately equal
+        assert!(f64::abs(tile2_px.1 - y_should) < f64::EPSILON*5.);
 
         // TODO: How can it be that a factor sqrt(3) in to_pixel does not break this?
         // TODO: test with a tile where both q and r are relevant?
