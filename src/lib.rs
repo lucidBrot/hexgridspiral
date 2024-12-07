@@ -16,7 +16,7 @@
 // The objects Tile, Ring, TileIndex, RingIndex are not supposed to be mutated.
 // Instead, (they) make new objects.
 use derive_more::{Add, Display, From, Into, Mul, Neg, Sub};
-use float_cmp::approx_eq;
+use approx_eq::assert_approx_eq;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use std::ops;
 
@@ -1358,8 +1358,8 @@ mod test {
         let iR = 0.5;
         let oR = 2. / f64::sqrt(3.) * iR;
         let y_should = 1.5 * oR;
-        approx_eq!(f64, tile2_px.0, -0.5);
-        approx_eq!(f64, tile2_px.1, y_should);
+        assert_approx_eq!(tile2_px.0, -0.5);
+        assert_approx_eq!(tile2_px.1, y_should);
         assert!(f64::abs(tile2_px.1 - y_should) < f64::EPSILON);
 
         // TODO: How can it be that a factor sqrt(3) in to_pixel does not break this?
@@ -1379,8 +1379,8 @@ mod test {
             let expected_pixel_x = unit_step * 1.5;
             let expected_pixel_y = unit_step * f64::sqrt(3.)/2.;
             let pixel = tile.to_pixel(origin, unit_step);
-            approx_eq!(f64, pixel.0, expected_pixel_x);
-            approx_eq!(f64, pixel.1, expected_pixel_y  );
+            assert_approx_eq!(pixel.0, expected_pixel_x);
+            assert_approx_eq!(pixel.1, expected_pixel_y  );
             let tile2 = CCTile::from_pixel(pixel);
             assert_eq!(tile, tile2);
         }
@@ -1410,8 +1410,8 @@ mod test {
             let tile = CCTile::make(1);
             assert_eq!(tile, CCTile::from_qr(1, -1));
             let pixel = tile.to_pixel(origin, unit_step);
-            approx_eq!(f64, pixel.0, 0.5);
-            approx_eq!(f64, pixel.1, f64::sqrt(3.) / 2. * unit_step);
+            assert_approx_eq!(pixel.0, 0.5);
+            assert_approx_eq!(pixel.1, f64::sqrt(3.) / 2. * unit_step);
         }
     }
 

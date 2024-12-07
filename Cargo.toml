@@ -12,5 +12,4 @@ rand_chacha = { version = "0.3.1"}
 derive_more = { version = "1", features = ["from", "add", "mul", "into", "display", "not"] }
 num_enum = {version = "0.7.3"}
 # Floating-Point Comparison for Tests.
-# Uses Units of Least Precision instead of an epsilon.
-float-cmp = { version = "0.10.0" }
+approx_eq = { version = "0.1" }
