@@ -18,6 +18,7 @@
 use derive_more::{Add, Display, From, Into, Mul, Neg, Sub};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use std::ops;
+use float_cmp::{approx_eq};
 
 #[derive(
     Debug, Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Add, Sub, Mul, Display, From, Into,
@@ -928,6 +929,7 @@ impl From<CCTile> for HGSTile {
 mod test {
     use super::*;
 
+
     #[test]
     fn test_multiplication_with_unit() {
         let u = CCTile::unit(&RingCornerIndex::RIGHT);
@@ -1350,7 +1352,7 @@ mod test {
     // TODO: Write a test for spiral_steps from unit RIGHT
 
     #[test]
-    fn test_conversion_from_pixel() {
+    fn test_conversion_from_pixel_and_back2() {
         let origin = (0., 0.);
         // TODO: What about other unit step sizes?
         let unit_step = 1.;
@@ -1365,7 +1367,51 @@ mod test {
             let tile2 = CCTile::from_pixel(pixel);
             assert_eq!(tile, tile2);
         }
+    }
 
+    #[test]
+    fn test_conversion_from_pixel(){
+        let origin = (0., 0.);
+        let unit_step = 1.;
+
+
+        // Origin should be at (0,0)
+        {
+            let tile = CCTile::make(0);
+            assert_eq!(tile.to_pixel(origin, unit_step),
+                       (0., 0.));
+        }
+
+        // First-ring tile
+        //
+        // Imagine same-sided triangles in the hex.
+        // triangle_height = sqrt(3)/2. * triangle_edge
+        // unit_step = 2*triangle_height
+        //
+        // Now imagine a same-sided triangle formed by three hexes.
+        // y = big_triangle_height = sqrt(3)/2. * big_triangle_edge
+        //   = sqrt(3)/2. * unit_step
+        {
+            let tile = CCTile::make(1);
+            assert_eq!(tile, CCTile::from_qr(1,-1));
+            let pixel = tile.to_pixel(origin, unit_step);
+            approx_eq!(f64, pixel.0, 0.5);
+            approx_eq!(f64,pixel.1,
+                 f64::sqrt(3.)/2. * unit_step);
+            // TODO: CONTINUE HERE: Does this test pass?
+            // TODO: CONTINUE HERE: Did I use 1.5 elsewhere where i need sqrt(3)/2. instead?
+
+        }
+
+    }
+
+    #[test]
+    fn test_conversion_from_pixel_and_back() {
+        let origin = (0., 0.);
+        // TODO: What about other unit step sizes?
+        let unit_step = 1.;
+        // TODO: Function to create from_pixel with other unit step and origin?
+        // Test that to and from pixel are consistent.
         for h in [0, 1, 2, 4, 5, 6, 8, 10, 27, 100] {
             let tile = CCTile::make(h);
             let pixel = tile.to_pixel(origin, unit_step);

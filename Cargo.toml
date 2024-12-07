@@ -11,3 +11,6 @@ rand_chacha = { version = "0.3.1"}
 # compiling. For the full list of features see this crate its `Cargo.toml`.
 derive_more = { version = "1", features = ["from", "add", "mul", "into", "display", "not"] }
 num_enum = {version = "0.7.3"}
+# Floating-Point Comparison for Tests.
+# Uses Units of Least Precision instead of an epsilon.
+float-cmp = { version = "0.10.0" }
