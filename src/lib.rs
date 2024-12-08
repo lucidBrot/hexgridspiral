@@ -15,7 +15,6 @@
 
 // The objects Tile, Ring, TileIndex, RingIndex are not supposed to be mutated.
 // Instead, (they) make new objects.
-use approx_eq::assert_approx_eq;
 use derive_more::{Add, Display, From, Into, Mul, Neg, Sub};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use std::ops;
@@ -135,7 +134,7 @@ impl ops::Sub<u64> for RingIndex {
 /// A Ring is hexagonal and consists of tiles.
 /// All Ring-Corner Tiles have the same number of steps to the origin.
 /// The other tiles in the Ring are on straight edges between corners.
-/// The [RingIndex] counts from 1 and thus is always equal to the [Ring::edg
+/// The [RingIndex] counts from 1 and thus is always equal to the [Ring::edge_size].
 #[derive(Debug, Copy, Clone, PartialEq, Add, Display, From, Into)]
 pub struct Ring {
     /// ring-index
@@ -703,6 +702,9 @@ impl CCTile {
     /// * `unit_step` : The size of one step from a hex tile's center to its neighboring tile's center.
     /// The `unit_step` is twice the incircle radius of the hex. Or `sqrt(3) * outcircle_radius`.
     /// * `origin` : The pixel position of the origin-tile's center.
+    ///
+    /// The resulting pixel coordinates are in a system where positive x corresponds to [RingCornerIndex::RIGHT] and
+    /// positive y corresponds to the UP-direction between ([RingCornerIndex::TOPLEFT] and [RingCornerIndex::TOPRIGHT])..
     pub fn to_pixel(&self, origin: (f64, f64), unit_step: f64) -> (f64, f64) {
         // We have point-top hexes. Call the hex inner-radius iR and the hex outer-radius oR.
         // The width (aka iR) of a hex equals sqrt(3)/2 * height (aka oR).
@@ -710,19 +712,17 @@ impl CCTile {
         // On the x-axis, two centers are exactly 2*iR away.
         // On the y-axis, they are not on the same x-coord, so it's different.
         // There they are 3/4 * oR away from each other.
-        // iR is the distance from the center to an edge.
-        let iR = unit_step / 2.;
         // oR is the outer radius of the hex circumcircle; or the edge length.
         // The unit_step is two times the height of a equilateral triangle, so
         // unit_step = sqrt(3.)/2*oR*2
-        let oR = unit_step / f64::sqrt(3.);
-        let redblob_size = oR;
+        let outer_radius = unit_step / f64::sqrt(3.);
+        let _redblob_size = outer_radius;
         // Walk both unit vectors.
         // Math according to https://www.redblobgames.com/grids/hexagons/#hex-to-pixel-axial
         // the unit vectors are, relative to the hex-edge length,
         // q_unit := (x = sqrt(3), y = 0) and r_unit := ( x= sqrt(3)/2, y=-3/2)
         // corresponding to q and r vectors from the origin tile to the next tile in pixels.
-        // TODO: Note that the y in the r_unit basis vector should be negative because I make y go upwards, not downwards. Should I?
+        // Note that the y in the r_unit basis vector should be negative because I make y go upwards, not downwards.
 
         // We can observe the following on an example or by looking at our unit vectors:
         // One step of incrementing q is one step along the x-axis.
@@ -759,17 +759,19 @@ impl CCTile {
 
     /// Wrapper around [CCTile::from_pixel_] with unit_step of size 1.
     pub fn from_pixel(pixel: (f64, f64)) -> Self {
-        Self::from_pixel_(pixel, 1.)
+        Self::from_pixel_(pixel, (0., 0.), 1.)
     }
 
     /// Inversion of the formula in [CCTile::to_pixel] and rounding to the nearest hex tile.
     /// `unit_step` determines the scaling - it is the distance between two adjacent hex tile centers, in pixel units.
-    pub fn from_pixel_(pixel: (f64, f64), unit_step: f64) -> Self {
+    pub fn from_pixel_(pixel: (f64, f64), origin: (f64, f64), unit_step: f64) -> Self {
+        let x = pixel.0 - origin.0;
+        let y = pixel.1 - origin.1;
         // Based on to_pixel formulas:
         // let x = unit_step * ((self.q as f64) + (self.r as f64) / 2.);
         // let y = f64::sqrt(3.)/2.*unit_step*(-self.r as f64);
-        let r = -2. / f64::sqrt(3.) * pixel.1 / unit_step;
-        let q = pixel.0 / unit_step - (r / 2.);
+        let r = -2. / f64::sqrt(3.) * y / unit_step;
+        let q = x / unit_step - (r / 2.);
         Self::round_to_nearest_tile(q, r)
     }
 
@@ -954,6 +956,7 @@ impl From<CCTile> for HGSTile {
 #[cfg(test)]
 mod test {
     use super::*;
+    use approx_eq::assert_approx_eq;
 
     #[test]
     fn test_multiplication_with_unit() {
@@ -1374,9 +1377,9 @@ mod test {
         let tile2 = CCTile::unit(&RingCornerIndex::TOPLEFT);
         assert_eq!(tile2, CCTile::from_qr(0, -1));
         let tile2_px = tile2.to_pixel((0., 0.), 1.);
-        let iR = 0.5;
-        let oR = 2. / f64::sqrt(3.) * iR;
-        let y_should = 1.5 * oR;
+        let inner_radius = 0.5;
+        let outer_radius = 2. / f64::sqrt(3.) * inner_radius;
+        let y_should = 1.5 * outer_radius;
         assert_approx_eq!(tile2_px.0, -0.5);
         assert_approx_eq!(tile2_px.1, y_should);
         // Sanity Check that the library is not always saying it's approximately equal
