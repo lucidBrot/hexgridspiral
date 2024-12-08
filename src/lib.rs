@@ -689,9 +689,6 @@ impl CCTile {
     // TODO: Impement CC Reflection on all axes
     // https://www.redblobgames.com/grids/hexagons/#reflection
 
-    // TODO: Implement CC to Cartesian2D
-    // https://www.redblobgames.com/grids/hexagons/#hex-to-pixel
-
     pub fn spiral_steps(&self, steps: i64) -> Self {
         let ht: HGSTile = (*self).into();
         let ht2 = ht.spiral_steps(steps);
@@ -745,15 +742,10 @@ impl CCTile {
         // redblob: Equivalent to my "mine2" formula, because `redblob_size * sqrt(3) = unit_step`:
         // Unit_step is twice the height of the equilateral triangle spanned by two oR and an edge.
         //let y = redblob_size * 3. / 2. * (-self.r as f64);
+
         // mine:
         //let y = f64::sqrt(3.)/2.*oR*(-self.r as f64);
         // TODO: Clearly wrong. go correct my handwritten notes.
-        // TODO: Why would redblob use 3 instead of sqrt(3) here?
-        // TODO: Transcribe my manual notes p.43 - p. 45
-        // TODO: Both variations pass my tests... need better tests. i.e. some where r is nonzero. .. but now my solution is wrong. where did my math go wrong? Are both solutions wrong?
-        // TODO: I think the matrix-form equation _and_ the code above it are wrong in y. They should use sqrt(3), not 3. But they are right and i am wrong. why?
-        // TODO: Document that y points up, not down.
-        // TODO: Tell redblob that r should be negative in "Hex to pixel" computation of y?
         return (origin.0 + x, origin.1 + y);
     }
 
@@ -1448,7 +1440,7 @@ mod test {
         let origin = (0., 0.);
         // TODO: What about other unit step sizes?
         let unit_step = 1.;
-        // TODO: Function to create from_pixel with other unit step and origin?
+        // TODO: Test to create from_pixel with other unit step and origin?
         // Test that to and from pixel are consistent.
         for h in [0, 1, 2, 4, 5, 6, 8, 10, 27, 100] {
             let tile = CCTile::make(h);
