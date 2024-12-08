@@ -7,7 +7,7 @@
 
 * My main contribution is **efficiently finding the ring-index** in HexGridSpiral-Space (HGS).
 
-However, most other use-cases benefit greatly from the Cube Coordinates outlined in [this redblobgames article](https://www.redblobgames.com/grids/hexagons/#distances-cube), this repo also implements
+However, most other use-cases benefit greatly from the Cube Coordinates outlined in [this redblobgames article](https://www.redblobgames.com/grids/hexagons/#distances-cube). This repo also implements
 
 * Conversion to **Cube Coordinates** for efficient **Neighbour** finding
 * A **Distance** between tiles in grid steps
@@ -61,3 +61,34 @@ and add to `Cargo.toml` :
 hexgridspiral = {path = "../hexgridspiral"}
 ```
 
+## Coordinate Systems
+
+`CCTile` is a pointy-top hex in a system where there are three non-orthogonal axes that always sum up to 1. It is explained very well on [redblobgames.com](https://www.redblobgames.com/grids/hexagons/#distances-cube) (Original image is from there). 
+
+On top of this, we add a spiral system of integers (`HGSTile`).
+
+| Cube Coordinates (`CCTile`)                                  | Hex Grid Spiral (`HGSTile`)     |
+| ------------------------------------------------------------ | ------------------------------- |
+| ![image-20241208105942125](./README.assets/image-20241208105942125.png) | ![](./README.assets/spiral.png) |
+
+So for example:
+
+```rust
+let tile = CCTile::from_qrs(2, -1, -1);
+assert_eq!(tile.spiral_index(), TileIndex(7));
+let tile2 = tile.spiral_steps(2);
+assert_eq!(tile2.spiral_index(), TileIndex(9));
+assert_eq!(tile2, CCTile::from_qrs(1, -2, 1));
+```
+
+The spiralling numbers count from zero (at the origin) and count counter-clockwise. In each `Ring`, the maximum number is at the right.
+
+These two coordinate systems use almost exclusively integers. But sometimes you may want to go back to pixel coordinates. For this we have the `.to_pixel`  and `.from_pixel`  functions. The pixel coordinate system x-Axis points to the right and the y-Axis points upwards. If you want the y-Axis to point downwards, you can simply flip the sign.
+
+## Documentation
+
+There is the usual `cargo doc`  documentation.
+
+I really believe that the function names should already tell what everything does, so as a first step I'd advise you to skim the code for function names you might want to use.
+
+I intend to add examples later on, once I have actually used this crate myself.
