@@ -743,9 +743,6 @@ impl CCTile {
         // Unit_step is twice the height of the equilateral triangle spanned by two oR and an edge.
         //let y = redblob_size * 3. / 2. * (-self.r as f64);
 
-        // mine:
-        //let y = f64::sqrt(3.)/2.*oR*(-self.r as f64);
-        // TODO: Clearly wrong. go correct my handwritten notes.
         return (origin.0 + x, origin.1 + y);
     }
 
@@ -884,9 +881,11 @@ impl IntoIterator for MovementRange {
 // Conversion from HexGridSpiral to Cube Coordinates:
 // We can easily get the previous corner.
 // Then add the rest.
-// TODO: Test this.
 impl From<HGSTile> for CCTile {
-    fn from(item: HGSTile) -> Self {
+    fn from(item: HGSTile) -> Self {(&item).into()}}
+
+impl From<&HGSTile> for CCTile {
+    fn from(item: &HGSTile) -> Self {
         if item.is_origin_tile() {
             return CCTile::origin();
         }
@@ -936,12 +935,17 @@ impl From<&CCTile> for HGSTile {
         // TODO: does rust do runtime checks at release build runtime for these vecs? Just out of curiosity.
         let corner0_hgs = HGSTile::new(ring.corner(wedges[0]));
         // If there are two wedges, the tile lies on the diagonal axes that lie between the usual CC grid axes.
-        // This can only happen on rings with odd full edgelengths, otherwise there is no tile on the wedge border.
         if wedges.len() == 2 {
-            let corner1_hgs = HGSTile::new(ring.corner(wedges[1]));
-            let smaller_corner_index = corner0_hgs.h.min(corner1_hgs.h);
+            // This can only happen on rings with odd full edgelengths, otherwise there is no tile on the wedge border.
             assert_eq!(ring.full_edge_size() % 2, 1);
-            return HGSTile::new(smaller_corner_index + ring.edge_size() / 2);
+            let corner1_hgs = HGSTile::new(ring.corner(wedges[1]));
+            // corner0_hgs is in ccw order right before corner1_hgs.
+            // If corner0_hgs is the ring-maximum, we have to special-case the addition to stay in the ring.
+            if corner1_hgs.h < corner0_hgs.h {
+                return HGSTile::new(corner0_hgs.ring_min().h + ring.edge_size()/2 -1);
+            } else {
+                return HGSTile::new(corner0_hgs.h + ring.edge_size() / 2);
+            }
         }
         assert_eq!(wedges.len(), 1);
         // We have the corner in the middle of this wedge (corner0). How do we get the correct tile's hsg index?
@@ -982,6 +986,24 @@ mod test {
         let o_cc: CCTile = CCTile::from(HGSTile::make(9));
         let nine = CCTile::from_qr(1, -2);
         assert_eq!(nine, o_cc);
+    }
+
+    #[test]
+    fn test_cc_hexgridspiral_conversion(){
+        let origin = HGSTile::make(0);
+        let tile0 : CCTile = origin.into();
+        assert_eq!(tile0, CCTile::origin());
+
+        let nine = CCTile::from_qr(1, -2);
+        let nine_to_hgs = nine.hgs();
+        assert_eq!(nine_to_hgs, HGSTile::make(9));
+
+        let seven2 = CCTile::from_qr(2, -1);
+        assert_eq!(seven2.hgs(), HGSTile::make(7));
+
+        let seven = CCTile::from_qrs(2, -1, -1);
+        assert_eq!(seven.hgs(), HGSTile::make(7));
+
     }
 
     #[test]
