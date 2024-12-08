@@ -749,6 +749,9 @@ impl CCTile {
         return (origin.0 + x, origin.1 + y);
     }
 
+    pub fn hgs(&self) -> HGSTile{self.into()}
+    pub fn spiral_index(&self) -> TileIndex {self.hgs().h}
+
     /// Wrapper around [CCTile::from_pixel_] with unit_step of size 1.
     pub fn from_pixel(pixel: (f64, f64)) -> Self {
         Self::from_pixel_(pixel, (0., 0.), 1.)
@@ -907,16 +910,18 @@ impl From<HGSTile> for CCTile {
     }
 }
 
-impl From<CCTile> for Ring {
-    fn from(item: CCTile) -> Self {
+impl From<&CCTile> for Ring {
+    fn from(item: &CCTile) -> Self {
         Ring::new(RingIndex(item.norm_steps() + 1))
     }
 }
 
-// Conversion from Cube Coordinates to HexGridSpiral:
-// TODO: Thoroughly test this.
-impl From<CCTile> for HGSTile {
-    fn from(item: CCTile) -> Self {
+impl From<CCTile> for Ring {
+    fn from(item: CCTile) -> Self {(&item).into()}
+}
+
+impl From<&CCTile> for HGSTile {
+    fn from(item: &CCTile) -> Self {
         let ring = Ring::from(item);
         let ring_index = ring.n;
         if ring.n == RingIndex::ORIGIN_RING {
@@ -942,6 +947,14 @@ impl From<CCTile> for HGSTile {
         // We have the corner in the middle of this wedge (corner0). How do we get the correct tile's hsg index?
         let offset_along_edge_hgs = item.grid_distance_to(&item.previous_corner_cc());
         return HGSTile::new(corner0_hgs.h + offset_along_edge_hgs);
+    }
+}
+
+// Conversion from Cube Coordinates to HexGridSpiral:
+// TODO: Thoroughly test this.
+impl From<CCTile> for HGSTile {
+    fn from(item: CCTile) -> Self {
+        (&item).into()
     }
 }
 
@@ -1473,5 +1486,15 @@ mod test {
                 assert_eq!(s, num_tiles);
             }
         }
+    }
+
+    #[test]
+    // used in readme, so should be correct pls
+    fn readme_hgs1(){
+        let tile = CCTile::from_qrs(2, -1, -1);
+        assert_eq!(tile.spiral_index(), TileIndex(7));
+        let tile2 = tile.spiral_steps(2);
+        assert_eq!(tile2.spiral_index(), TileIndex(9));
+        assert_eq!(tile2, CCTile::from_qrs(1, -2, 1));
     }
 }

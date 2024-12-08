@@ -36,3 +36,28 @@ assert_eq!(tile7.euclidean_distance_sq(&tileo), 3);
 
 let corner0_hgs = HGSTile::new(ring.corner(&RingCornerIndex::BOTTOMLEFT));
 ```
+
+## Installation
+
+```toml
+# Cargo.toml:
+[dependencies]
+hexgridspiral = { version = "0.1.0" }
+```
+
+TODO: Actually publish that crate so this installation step actually works.
+
+### For Development
+
+```bash
+git clone git@github.com:lucidBrot/hexgridspiral.git
+cd ../your-dependent-project
+```
+
+and add to `Cargo.toml` :
+
+```toml
+[dependencies]
+hexgridspiral = {path = "../hexgridspiral"}
+```
+
