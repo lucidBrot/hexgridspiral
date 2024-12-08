@@ -324,7 +324,7 @@ impl Sub<i32> for TileIndex {
     type Output = TileIndex;
 
     fn sub(self, rhs: i32) -> Self::Output {
-        TileIndex(((self.value() as i64 - rhs as i64)) as u64)
+        TileIndex((self.value() as i64 - rhs as i64) as u64)
     }
 }
 
@@ -511,6 +511,41 @@ impl CCTile {
         })
     }
 
+    /// `self` must be a *corner* of a ring with ring-index >= 2.
+    /// Returns the corresponding direction.
+    pub fn corner_to_direction(corner: &Self) -> RingCornerIndex {
+        assert!(corner.is_corner());
+        assert!(!corner.is_origin_tile());
+        if corner.r == 0 {
+            // We are on the r-axis, so it must be LEFT or RIGHT
+            if corner.q > 0 {
+                return RingCornerIndex::RIGHT;
+            } else {
+                return RingCornerIndex::LEFT;
+            }
+        }
+        if corner.q == 0 {
+            if corner.r < 0 {
+                return RingCornerIndex::TOPLEFT;
+            } else {
+                return RingCornerIndex::BOTTOMRIGHT;
+            }
+        }
+        if corner.s == 0 {
+            if corner.q > 0 {
+                return RingCornerIndex::TOPRIGHT;
+            } else {
+                return RingCornerIndex::BOTTOMLEFT;
+            }
+        }
+        panic!("This can't happen. A non-origin corner tile has no axis set to 0.")
+    }
+
+    /// Returns `true`  iff the tile lies on the corner of a ring
+    pub fn is_corner(&self) -> bool {
+        self.q == 0 || self.r == 0 || self.s == 0
+    }
+
     /// Adapted Euclidean Distance by
     /// Xiangguo Li
     ///
@@ -545,6 +580,10 @@ impl CCTile {
     /// because we know that `q+r+s == 0` and we also know that two of the three coordinates must be of the same sign (pigeonhole principle). That means the third must be in absolute value as big as the two of the same sign. So the maximal abs is equivalent to the above.. qed.
     // TODO: Test this.
     pub fn norm_steps(&self) -> u64 {
+        self.max_coord()
+    }
+
+    fn max_coord(&self) -> u64 {
         let result = [self.q, self.r, self.s]
             .iter()
             .map(|coord| coord.abs() as u64)
@@ -691,7 +730,7 @@ impl CCTile {
         if &closest_corner == self {
             return closest_corner;
         }
-        let pre_closest_corner = closest_corner.rot60ccw();
+        let pre_closest_corner = closest_corner.rot60cw();
         // One of these must be the previous corner of self.
         // If closest_corner already is the previous corner, then the
         // pre_closest_corner will not be on the same ring-edge as self anymore.
@@ -712,11 +751,10 @@ impl CCTile {
     }
 
     pub fn is_colinear_with(&self, other: &CCTile) -> bool {
-        (self.q == other.q || self.r == other.r || self.s == other.s)
+        self.q == other.q || self.r == other.r || self.s == other.s
     }
-    
-    pub fn are_colinear_with(&self, other: &CCTile, third: &CCTile) -> bool {
 
+    pub fn are_colinear_with(&self, other: &CCTile, third: &CCTile) -> bool {
         if other.q == third.q {
             if self.q == other.q {
                 // We're on the same line as both corners, so
@@ -1021,11 +1059,12 @@ impl From<&CCTile> for HGSTile {
         let wedges = item.wedge_around_ringcorner();
         // If the item tile is a ring-corner, there will only be one wedge. Otherwise, if it is the border of a wedge, there might be two.
         // TODO: does rust do runtime checks at release build runtime for these vecs? Just out of curiosity.
-        let corner0_hgs = HGSTile::new(ring.corner(wedges[0]));
+        let closest_corner_hgs = HGSTile::new(ring.corner(wedges[0]));
         // If there are two wedges, the tile lies on the diagonal axes that lie between the usual CC grid axes.
         if wedges.len() == 2 {
             // This can only happen on rings with odd full edgelengths, otherwise there is no tile on the wedge border.
             assert_eq!(ring.full_edge_size() % 2, 1);
+            let corner0_hgs = closest_corner_hgs;
             let corner1_hgs = HGSTile::new(ring.corner(wedges[1]));
             // corner0_hgs is in ccw order right before corner1_hgs.
             // If corner0_hgs is the ring-maximum, we have to special-case the addition to stay in the ring.
@@ -1037,8 +1076,14 @@ impl From<&CCTile> for HGSTile {
         }
         assert_eq!(wedges.len(), 1);
         // We have the corner in the middle of this wedge (corner0). How do we get the correct tile's hsg index?
-        let offset_along_edge_hgs = item.grid_distance_to(&item.previous_corner_cc());
-        return HGSTile::new(corner0_hgs.h + offset_along_edge_hgs);
+        let previous_corner = &item.previous_corner_cc();
+        let offset_along_edge_hgs = item.grid_distance_to(previous_corner);
+
+        // We need to find the previous_corner's hgs index.
+        // We know it is a corner, so we can look up it's orientation.
+        let rci = CCTile::corner_to_direction(previous_corner);
+        let previous_corner_hgs = HGSTile::new(ring.corner(rci));
+        return HGSTile::new(previous_corner_hgs.h + offset_along_edge_hgs);
     }
 }
 
