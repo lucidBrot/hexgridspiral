@@ -18,6 +18,7 @@ However, most other use-cases benefit greatly from the Cube Coordinates outlined
 * Rotation by 60 degrees around the origin
 * **Addition**, Subtraction of tiles
 * Which **Wedge** of the world (pizza slice) a tile is in
+* Which Tiles are in **Movement Range** and **Intersecting** Movement Ranges.
 
 ## Usage
 

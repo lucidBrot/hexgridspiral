@@ -963,6 +963,23 @@ impl MovementRange {
             s_max: i64::min(self.s_max, other.s_max),
         }
     }
+
+    pub fn contains(&self, tile: &CCTile) -> bool {
+        tile.q <= self.q_max
+            && tile.r <= self.r_max
+            && tile.s <= self.s_max
+            && self.q_min <= tile.q
+            && self.r_min <= tile.r
+            && self.s_min <= tile.s
+    }
+
+    pub fn count_tiles(&self) -> usize {
+        let mut count = 0;
+        for _ in *self {
+            count += 1;
+        }
+        return count;
+    }
 }
 
 impl IntoIterator for MovementRange {
@@ -1627,8 +1644,6 @@ mod test {
         }
     }
 
-    // TODO: test movement range intersection
-
     #[test]
     fn test_movement_range() {
         for h in [0, 1, 2, 4, 5, 6, 7, 10, 27, 100] {
@@ -1639,7 +1654,7 @@ mod test {
                 for tile in m {
                     assert!(tile.grid_distance_to(&o) <= max_steps);
                 }
-                // TODO: Everything close enough must be in the range.
+                // Everything close enough must be in the range.
                 // We check this by ensuring that the number of entries is correct.
                 let collected: Vec<CCTile> = m.into_iter().collect();
                 let num_tiles = collected.len() as u64;
@@ -1650,6 +1665,33 @@ mod test {
                 assert_eq!(s, num_tiles);
             }
         }
+    }
+
+    #[test]
+    fn test_movement_range_intersection() {
+        let tile_a = CCTile::origin() + CCTile::unit(&RingCornerIndex::LEFT);
+        let tile_b = CCTile::origin() + CCTile::unit(&RingCornerIndex::RIGHT) * 2;
+        //_ _ A O _ B _ _
+        let range_a = tile_a.movement_range(2);
+        assert!(range_a.contains(&tile_a));
+        assert_eq!(range_a.contains(&CCTile::origin()), true);
+        assert_eq!(range_a.count_tiles(), 19);
+
+        let range_b = tile_b.movement_range(1);
+        assert!(range_b.contains(&tile_b));
+        assert_eq!(range_b.count_tiles(), 7);
+        assert_eq!(range_b.contains(&CCTile::origin()), false);
+
+        let range_ab = range_a.intersect(&range_b);
+        assert_eq!(range_ab.contains(&tile_a), false);
+        assert_eq!(range_ab.contains(&tile_b), false);
+        assert_eq!(range_ab.contains(&CCTile::origin()), false);
+
+        let mut num_elems = 0;
+        for _elem in range_ab {
+            num_elems += 1;
+        }
+        assert_eq!(num_elems, 1);
     }
 
     #[test]
