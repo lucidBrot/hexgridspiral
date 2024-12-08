@@ -664,6 +664,7 @@ impl CCTile {
     // The previous ring-corner in ccw direction (or the next corner in clockwise direction)
     // Might be this tile itself.
     // TODO: Test
+    // TODO: This might only work correctly when the corner we want is the same wedge.
     pub fn previous_corner_cc(&self) -> CCTile {
         assert!(!self.is_origin_tile());
         // get corner index
@@ -671,7 +672,7 @@ impl CCTile {
         // get ring radius
         let r = Ring::from(*self);
         let direction = CCTile::unit(&w);
-        direction * (r.n.value() as i64)
+        direction * ((r.n.value() as i64) - 1)
     }
 
     /// Rotate 60 degrees counter-clockwise
@@ -746,8 +747,12 @@ impl CCTile {
         return (origin.0 + x, origin.1 + y);
     }
 
-    pub fn hgs(&self) -> HGSTile{self.into()}
-    pub fn spiral_index(&self) -> TileIndex {self.hgs().h}
+    pub fn hgs(&self) -> HGSTile {
+        self.into()
+    }
+    pub fn spiral_index(&self) -> TileIndex {
+        self.hgs().h
+    }
 
     /// Wrapper around [CCTile::from_pixel_] with unit_step of size 1.
     pub fn from_pixel(pixel: (f64, f64)) -> Self {
@@ -882,7 +887,10 @@ impl IntoIterator for MovementRange {
 // We can easily get the previous corner.
 // Then add the rest.
 impl From<HGSTile> for CCTile {
-    fn from(item: HGSTile) -> Self {(&item).into()}}
+    fn from(item: HGSTile) -> Self {
+        (&item).into()
+    }
+}
 
 impl From<&HGSTile> for CCTile {
     fn from(item: &HGSTile) -> Self {
@@ -916,7 +924,9 @@ impl From<&CCTile> for Ring {
 }
 
 impl From<CCTile> for Ring {
-    fn from(item: CCTile) -> Self {(&item).into()}
+    fn from(item: CCTile) -> Self {
+        (&item).into()
+    }
 }
 
 impl From<&CCTile> for HGSTile {
@@ -942,7 +952,7 @@ impl From<&CCTile> for HGSTile {
             // corner0_hgs is in ccw order right before corner1_hgs.
             // If corner0_hgs is the ring-maximum, we have to special-case the addition to stay in the ring.
             if corner1_hgs.h < corner0_hgs.h {
-                return HGSTile::new(corner0_hgs.ring_min().h + ring.edge_size()/2 -1);
+                return HGSTile::new(corner0_hgs.ring_min().h + ring.edge_size() / 2 - 1);
             } else {
                 return HGSTile::new(corner0_hgs.h + ring.edge_size() / 2);
             }
@@ -989,9 +999,9 @@ mod test {
     }
 
     #[test]
-    fn test_cc_hexgridspiral_conversion(){
+    fn test_cc_hexgridspiral_conversion() {
         let origin = HGSTile::make(0);
-        let tile0 : CCTile = origin.into();
+        let tile0: CCTile = origin.into();
         assert_eq!(tile0, CCTile::origin());
 
         let nine = CCTile::from_qr(1, -2);
@@ -1004,6 +1014,8 @@ mod test {
         let seven = CCTile::from_qrs(2, -1, -1);
         assert_eq!(seven.hgs(), HGSTile::make(7));
 
+        let eight = CCTile::from_qrs(2, -2, 0);
+        assert_eq!(eight.hgs(), HGSTile::make(8));
     }
 
     #[test]
@@ -1512,7 +1524,7 @@ mod test {
 
     #[test]
     // used in readme, so should be correct pls
-    fn readme_hgs1(){
+    fn readme_hgs1() {
         let tile = CCTile::from_qrs(2, -1, -1);
         assert_eq!(tile.spiral_index(), TileIndex(7));
         let tile2 = tile.spiral_steps(2);
