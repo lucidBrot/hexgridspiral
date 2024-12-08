@@ -314,6 +314,18 @@ impl HGSTile {
     pub fn ring_edge(&self) -> RingEdge {
         self.ring.edge(self.h)
     }
+
+    pub fn cc(&self) -> CCTile {
+        self.into()
+    }
+}
+
+impl Sub<i32> for TileIndex {
+    type Output = TileIndex;
+
+    fn sub(self, rhs: i32) -> Self::Output {
+        TileIndex(((self.value() as i64 - rhs as i64)) as u64)
+    }
 }
 
 impl Ring {
@@ -451,6 +463,14 @@ fn ring_min(n: RingIndex) -> TileIndex {
         return TileIndex(0);
     }
     return ring_max(n - 1) + 1;
+}
+
+impl Sub<i64> for TileIndex {
+    type Output = TileIndex;
+
+    fn sub(self, rhs: i64) -> Self::Output {
+        TileIndex(((self.value() as i64) - rhs) as u64)
+    }
 }
 
 impl CCTile {
@@ -649,10 +669,10 @@ impl CCTile {
         return vec![edge.start(), edge.end()];
     }
 
-    // The previous ring-corner in ccw direction (or the next corner in clockwise direction)
+    // The closest ring-corner. If tied, the previous corner in ccw direction (or the next corner in clockwise direction)
     // Might be this tile itself.
     // TODO: Test
-    pub fn previous_corner_hgs(&self) -> HGSTile {
+    pub fn closest_corner_hgs(&self) -> HGSTile {
         assert!(!self.is_origin_tile());
         // get corner index
         let w = self.wedge_around_ringcorner()[0];
@@ -664,22 +684,26 @@ impl CCTile {
     // The previous ring-corner in ccw direction (or the next corner in clockwise direction)
     // Might be this tile itself.
     // TODO: Test
-    // TODO: This might only work correctly when the corner we want is the same wedge.
     pub fn previous_corner_cc(&self) -> CCTile {
+        // TODO: This is used in converting from CCTile to HGSTile, so it may not rely on conversion to hgs.
         assert!(!self.is_origin_tile());
         let closest_corner = self.closest_corner_cc();
         if closest_corner.spiral_index() <= self.spiral_index(){
             return closest_corner;
         } else {
-            let edge_length = closest_corner.hgs().ring.edge_size() as i64;
-            return closest_corner.hgs().spiral_steps((-1) * edge_length).into()
+            let closest_corner_hgs = closest_corner.hgs();
+            let edge_length = closest_corner_hgs.ring.edge_size();
+
+            // Basic approach here. Will fail if the corner's tile-index is so low that
+            // the subtraction will lead to a lower ring.
+            // In that case, we need to give the ring-max instead, which is a corner.
+            if closest_corner_hgs.ring_min().h + edge_length > closest_corner_hgs.h {
+                return closest_corner_hgs.ring_max().cc()
+            }
+
+            let previous_corner = closest_corner.spiral_index() - edge_length;
+            return HGSTile::new(previous_corner).cc();
         }
-        // get corner index
-        let w = self.wedge_around_ringcorner()[0];
-        // get ring radius
-        let r = Ring::from(*self);
-        let direction = CCTile::unit(&w);
-        direction * ((r.n.value() as i64) - 1)
     }
 
     // The closest ring-corner. If there are two, the previous in ccw direction (or the next corner in clockwise direction)
@@ -1040,8 +1064,8 @@ mod test {
         assert_eq!(eight.hgs(), HGSTile::make(8));
 
         // before a corner, and not in the wedge of the previous corner
-        let tileA = CCTile::from_qr(1, -3);
-        assert_eq!(tileA.hgs(), HGSTile::make(23));
+        let tile_a = CCTile::from_qr(1, -3);
+        assert_eq!(tile_a.hgs(), HGSTile::make(23));
     }
 
     #[test]
