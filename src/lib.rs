@@ -688,22 +688,57 @@ impl CCTile {
         // TODO: This is used in converting from CCTile to HGSTile, so it may not rely on conversion to hgs.
         assert!(!self.is_origin_tile());
         let closest_corner = self.closest_corner_cc();
-        if closest_corner.spiral_index() <= self.spiral_index(){
+        if &closest_corner == self {
             return closest_corner;
-        } else {
-            let closest_corner_hgs = closest_corner.hgs();
-            let edge_length = closest_corner_hgs.ring.edge_size();
-
-            // Basic approach here. Will fail if the corner's tile-index is so low that
-            // the subtraction will lead to a lower ring.
-            // In that case, we need to give the ring-max instead, which is a corner.
-            if closest_corner_hgs.ring_min().h + edge_length > closest_corner_hgs.h {
-                return closest_corner_hgs.ring_max().cc()
-            }
-
-            let previous_corner = closest_corner.spiral_index() - edge_length;
-            return HGSTile::new(previous_corner).cc();
         }
+        let pre_closest_corner = closest_corner.rot60ccw();
+        // One of these must be the previous corner of self.
+        // If closest_corner already is the previous corner, then the
+        // pre_closest_corner will not be on the same ring-edge as self anymore.
+        //
+        // One the same ring-edge (and beyond, on the same line), one coordinate
+        // remains constant. When we now take a turn on the ring (around a corner),
+        // this coord will change.
+        if self.are_colinear_with(&pre_closest_corner, &closest_corner) {
+            return pre_closest_corner;
+        }
+        // All coordinates were different. The pre_corner is too far away.
+        return closest_corner;
+        // It can never happen that two coordinates match. Either one, zero, or three.
+
+        // I believe this function could also be implemented by simply checking whether the pre_corner is colinear with the tile.
+        // Which, again a belief, I think we can do simply by checking whether at least one coordinate is the same value.
+        // This would need some testing though.
+    }
+
+    pub fn is_colinear_with(&self, other: &CCTile) -> bool {
+        (self.q == other.q || self.r == other.r || self.s == other.s)
+    }
+    
+    pub fn are_colinear_with(&self, other: &CCTile, third: &CCTile) -> bool {
+
+        if other.q == third.q {
+            if self.q == other.q {
+                // We're on the same line as both corners, so
+                // we should be in the middle of them.
+                return true;
+            }
+        }
+        if other.r == third.r {
+            if self.r == other.r {
+                // We're on the same line as both corners, so
+                // we should be in the middle of them.
+                return true;
+            }
+        }
+        if other.s == third.s {
+            if self.s == other.s {
+                // We're on the same line as both corners, so
+                // we should be in the middle of them.
+                return true;
+            }
+        }
+        return false;
     }
 
     // The closest ring-corner. If there are two, the previous in ccw direction (or the next corner in clockwise direction)
