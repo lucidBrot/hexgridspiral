@@ -930,6 +930,16 @@ impl CCTile {
             s_max: self.s + n,
         }
     }
+
+    /// How big a single row step in the direction [RingCornerIndex::TOPRIGHT] is in pixels.
+    /// - `unit_step`: The step size between two adjacent tile centers, in pixels (floats, not manhattan distance).
+    pub fn pixel_step_vertical(unit_step: f64) -> (f64, f64) {
+        // Notably, the step down is (oR + 0.5*edge), equals (1.5 * edge),
+        // equals (1.5 * 2 iR/sqrt(3.)), equals (1.5 * unit_step/sqrt(3.)),
+        // equals (unit_step* 3/2 /sqrt(3.)),
+        // equals (unit_step * sqrt(3.) / 2).
+        (unit_step, unit_step * f64::sqrt(3.) / 2.)
+    }
 }
 
 /// <https://www.redblobgames.com/grids/hexagons/#range-coordinate>
@@ -1392,6 +1402,9 @@ mod test {
                 assert_eq!(tile_a.norm_steps(), ring_step.try_into().unwrap());
             }
         }
+
+        let tile35 = HGSTile::make(35).cc();
+        assert_eq!(tile35.norm_steps(), 3);
     }
 
     #[test]
@@ -1585,7 +1598,13 @@ mod test {
         // Sanity Check that the library is not always saying it's approximately equal
         assert!(f64::abs(tile2_px.1 - y_should) < f64::EPSILON * 5.);
 
-        // TODO: test with a tile where both q and r are relevant?
+        // Test with a tile where both q and r are relevant, and origin and unit step are non-default.
+        let tile35 = HGSTile::make(35).cc();
+        let pixel35 = tile35.to_pixel((2., 3.), 4.);
+        // Tile 35, aka (3, 1, -4), is 2.5 steps to the right and one step down.
+        let pxstep = CCTile::pixel_step_vertical(4.);
+        let should_be_pixel_35 = (2. + 2.5 * pxstep.0, 3. - pxstep.1);
+        assert_eq!(pixel35, should_be_pixel_35);
     }
     // TODO: Write a test for spiral_steps from unit RIGHT
 
