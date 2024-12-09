@@ -511,6 +511,10 @@ impl CCTile {
         })
     }
 
+    pub fn units() -> impl Iterator<Item = CCTile> {
+        RingCornerIndex::all().map(|rci| CCTile::unit(&rci))
+    }
+
     /// `self` must be a *corner* of a ring with ring-index >= 2.
     /// Returns the corresponding direction.
     pub fn corner_to_direction(corner: &Self) -> RingCornerIndex {
@@ -578,7 +582,6 @@ impl CCTile {
     /// Taking the maximum here is equal to computing
     /// ` (abs(q) + abs(r) + abs(s)) / 2`
     /// because we know that `q+r+s == 0` and we also know that two of the three coordinates must be of the same sign (pigeonhole principle). That means the third must be in absolute value as big as the two of the same sign. So the maximal abs is equivalent to the above.. qed.
-    // TODO: Test this.
     pub fn norm_steps(&self) -> u64 {
         self.max_coord()
     }
@@ -1378,6 +1381,17 @@ mod test {
         assert_eq!(t3.norm_steps(), n1);
 
         assert_eq!(CCTile::from_qr(0, 0).norm_steps(), 0);
+
+        // test several rings
+        for ring_step in 1..4 {
+            // tiles located opposite each other
+            for direction in CCTile::units() {
+                let tile_a = direction * ring_step;
+                let tile_b = direction * -ring_step;
+                assert_eq!(tile_a.norm_steps(), tile_b.norm_steps());
+                assert_eq!(tile_a.norm_steps(), ring_step.try_into().unwrap());
+            }
+        }
     }
 
     #[test]
