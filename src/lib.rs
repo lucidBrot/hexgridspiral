@@ -486,7 +486,7 @@ impl CCTile {
         CCTile::from_qrs(0, 0, 0)
     }
     pub fn from_qrs(q: i64, r: i64, s: i64) -> CCTile {
-        assert_eq!(q + r + s, 0);
+        assert_eq!(q + r + s, 0, "q + r + s does not sum up to zero for the tile ({q},{r},{s})!");
         CCTile { q, r, s }
     }
     pub fn from_qr(q: i64, r: i64) -> CCTile {
@@ -807,7 +807,59 @@ impl CCTile {
     }
 
     // TODO: Impement CC Reflection on all axes
-    // https://www.redblobgames.com/grids/hexagons/#reflection
+    /// See <https://www.redblobgames.com/grids/hexagons/#reflection> for a
+    /// visualization.
+    ///
+    /// This function reflects a tile across an axis.
+    /// It can be ambiguous what an "axis" means, so to be clear:
+    /// When reflecting along the q-Axis, we mean here that the q-coordinate stays constant.
+    /// ```
+    /// use hexgridspiral::CCTile;
+    /// let tile = CCTile::from_qrs(4, -3, -1);
+    /// let tile_r = tile.reflect_along_constant_axis(false, true, false);
+    /// assert_eq!(tile_r, (-1, -3, 4).into());
+    /// let tile_q = tile.reflect_along_constant_axis(true, false, false);
+    /// assert_eq!(tile_q, (4, -1, -3).into());
+    /// ```
+    /// Applies multiple reflections if multiple orders are specified. In this case the order is Q,R,S such that
+    /// ```
+    /// use hexgridspiral::CCTile;
+    /// let tile = CCTile::from_qrs(4, -3, -1);
+    /// let tile_q = tile.reflect_along_constant_axis(true, false, false);
+    /// let tile_qr = tile_q.reflect_along_constant_axis(false, true, false);
+    /// let tile_qrs = tile_qr.reflect_along_constant_axis(false, false, true);
+    /// let tile_direct_qrs = tile.reflect_along_constant_axis(true, true, true);
+    /// assert_eq!(tile_qrs, tile_direct_qrs);
+    /// ```
+    /// So for readability it's probably better to just specify each seperately in sequence.
+    pub fn reflect_along_constant_axis(&self, q_: bool, r_: bool, s_: bool) -> CCTile {
+        // swap the coordinates that are not on the constant axis.
+        let (mut q, mut r, mut s) = (self.q, self.r, self.s);
+        if q_ {
+            (r, s) = (s, r);
+        }
+        if r_ {
+            (q, s) = (s, q);
+        }
+        if s_ {
+            (q, r) = (r, q);
+        }
+        CCTile::from_qrs(q, r, s)
+    }
+
+    /// Reflect the tile to the other side of the line where the specified axis remains constant.
+    /// Applies multiple times if multiple orders are specified, in order Q,R,S.
+    pub fn reflect_orthogonally_across_constant_axis(&self, q_: bool, r_: bool, s_: bool) -> CCTile {
+        self.reflect_along_constant_axis(q_, r_, s_).reflect_diagonally()
+    }
+
+    /// Reflects diagonally along the line through this tile and the origin.
+    /// The resulting tile lies on the opposite side of the origin, with the same distance.
+    pub fn reflect_diagonally(&self) -> CCTile {
+        CCTile::from_qrs(-self.q, -self.r, -self.s)
+    }
+
+    // TODO: implement reflect_* versions for non-origin line.
 
     pub fn spiral_steps(&self, steps: i64) -> Self {
         let ht: HGSTile = (*self).into();
@@ -1062,6 +1114,7 @@ impl From<&HGSTile> for CCTile {
         return cc_edge_start + cc_edge_unit * (steps_from_corner.value() as i64);
     }
 }
+
 
 impl From<&CCTile> for Ring {
     fn from(item: &CCTile) -> Self {
@@ -1744,5 +1797,28 @@ mod test {
         let tile2 = tile.spiral_steps(2);
         assert_eq!(tile2.spiral_index(), TileIndex(9));
         assert_eq!(tile2, CCTile::from_qrs(1, -2, 1));
+    }
+
+    // TODO: implement functions for reflect_vertical and reflect_horizontal
+
+    #[test]
+    fn test_reflect(){
+        let tile = CCTile::from_qrs(4, -3, -1);
+        let tile_r = tile.reflect_along_constant_axis(false, true, false);
+        assert_eq!(tile_r, (-1, -3, 4).into());
+        let tile_q = tile.reflect_along_constant_axis(true, false, false);
+        assert_eq!(tile_q, (4, -1, -3).into());
+        let tile_s = tile.reflect_along_constant_axis(false, false, true);
+        assert_eq!(tile_s, (-3, 4, -1).into());
+
+        let tile_reflected = tile.reflect_diagonally();
+        assert_eq!(tile_reflected, (-4, 3, 1).into());
+
+        let tile_ortho_r = tile.reflect_orthogonally_across_constant_axis(false, true, false);
+        assert_eq!(tile_ortho_r, (1, 3, -4).into());
+        let tile_ortho_s = tile.reflect_orthogonally_across_constant_axis(false, false, true);
+        assert_eq!(tile_ortho_s, (3, -4, 1).into());
+        let tile_ortho_q = tile.reflect_orthogonally_across_constant_axis(true, false, false);
+        assert_eq!(tile_ortho_q, ( -4, 1, 3).into());
     }
 }
