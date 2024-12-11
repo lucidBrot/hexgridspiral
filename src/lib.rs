@@ -1606,7 +1606,6 @@ mod test {
         let should_be_pixel_35 = (2. + 2.5 * pxstep.0, 3. - pxstep.1);
         assert_eq!(pixel35, should_be_pixel_35);
     }
-    // TODO: Write a test for spiral_steps from unit RIGHT
 
     #[test]
     fn test_conversion_from_pixel_and_back2() {
@@ -1725,6 +1724,16 @@ mod test {
             num_elems += 1;
         }
         assert_eq!(num_elems, 1);
+    }
+
+    #[test]
+    fn test_spiral_steps() {
+        let ht: HGSTile = CCTile::unit(&RingCornerIndex::RIGHT).into();
+        assert_eq!(ht.h.value(), 6);
+        let ht_minus1 = ht.decrement_spiral();
+        assert_eq!(ht_minus1.h, ht.h - 1);
+        let ht2 = ht.spiral_steps(3);
+        assert_eq!(ht2.h.value(), 9);
     }
 
     #[test]
