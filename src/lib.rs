@@ -1118,18 +1118,19 @@ impl MovementRange {
             && self.s_min <= tile.s
     }
 
-cfg_if::cfg_if! {if #[cfg(feature = "nightly")] {
-    #[cfg(any(feature = "nightly", doc))]
-    #[doc(cfg(feature = "nightly"))]
-    pub fn count_tiles(&self) -> usize {
-        let mut count = 0;
-        for _ in *self {
-            count += 1;
+    cfg_if::cfg_if! {if #[cfg(feature = "nightly")] {
+        #[cfg(any(feature = "nightly", doc))]
+        #[doc(cfg(feature = "nightly"))]
+        pub fn count_tiles(&self) -> usize {
+            let mut count = 0;
+            for _ in *self {
+                count += 1;
+            }
+            return count;
         }
-        return count;
+    }
     }
 }
-}}
 
 cfg_if::cfg_if! {if #[cfg(feature = "nightly")] {
 #[cfg(any(feature = "nightly", doc))]
