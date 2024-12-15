@@ -1,6 +1,6 @@
 [package]
 name = "hexgridspiral"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 include = [
     "**/*.rs",
@@ -37,4 +37,4 @@ nightly = []
 [package.metadata.docs.rs]
 # Which feature flags to pass when building docs
 features = ["nightly"]
-cargo-args = ["+nightly"]
+#cargo-args = ["+nightly"]
