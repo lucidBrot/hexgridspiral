@@ -14,6 +14,7 @@
 #![cfg_attr(feature = "nightly", feature(coroutines))]
 #![cfg_attr(feature = "nightly", feature(iter_from_coroutine))]
 #![cfg_attr(feature = "nightly", feature(impl_trait_in_assoc_type))]
+#![cfg_attr(feature = "nightly", feature(doc_cfg))]
 
 // The objects Tile, Ring, TileIndex, RingIndex are not supposed to be mutated.
 // Instead, (they) make new objects.
@@ -26,7 +27,9 @@ use std::ops;
 )]
 pub struct TileIndex(pub u64);
 
-#[cfg(feature = "nightly")]
+cfg_if::cfg_if! {if #[cfg(feature = "nightly")] {
+#[cfg(any(feature = "nightly", doc))]
+#[doc(cfg(feature = "nightly"))]
 impl std::iter::Step for TileIndex {
     fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
         return if end < start {
@@ -57,6 +60,7 @@ impl std::iter::Step for TileIndex {
         (start - u64::try_from(count).ok()?).try_into().ok()
     }
 }
+}}
 
 /// Which Ring around the origin we're at, counting from 1.
 /// Implementation Detail: The RingIndex wraps an integer that equals the number of tiles in one edge of the Ring (including both corners).
@@ -1114,7 +1118,9 @@ impl MovementRange {
             && self.s_min <= tile.s
     }
 
-    #[cfg(feature = "nightly")]
+cfg_if::cfg_if! {if #[cfg(feature = "nightly")] {
+    #[cfg(any(feature = "nightly", doc))]
+    #[doc(cfg(feature = "nightly"))]
     pub fn count_tiles(&self) -> usize {
         let mut count = 0;
         for _ in *self {
@@ -1123,8 +1129,11 @@ impl MovementRange {
         return count;
     }
 }
+}}
 
 cfg_if::cfg_if! {if #[cfg(feature = "nightly")] {
+#[cfg(any(feature = "nightly", doc))]
+#[doc(cfg(feature = "nightly"))]
 impl IntoIterator for MovementRange {
     type Item = CCTile;
     type IntoIter = impl Iterator<Item = Self::Item>;
@@ -1458,7 +1467,9 @@ mod test {
         assert_eq!(rci_vec[1], RingCornerIndex::BOTTOMLEFT);
     }
 
-    #[cfg(feature = "nightly")]
+    cfg_if::cfg_if! {if #[cfg(feature = "nightly")] {
+    #[cfg(any(feature = "nightly", doc))]
+    #[doc(cfg(feature = "nightly"))]
     #[test]
     fn test_ring_index_for_tile_index_small() {
         for ring_index in 1..3 {
@@ -1470,6 +1481,7 @@ mod test {
             }
         }
     }
+    }}
 
     #[test]
     fn test_ring_index_construction_speed() {

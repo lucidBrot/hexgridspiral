@@ -31,8 +31,10 @@ cfg-if = "1.0.0"
 
 [features]
 # Gating functionality that only compiles with nightly rust.
+# Explanation: https://stackoverflow.com/a/79282867/2550406
 nightly = []
-# TODO: Add nightly feature-gates like https://stackoverflow.com/a/58480230/2550406
-# Features: https://doc.rust-lang.org/cargo/reference/features.html
-# "Note: Rustdoc has experimental support for annotating the documentation to indicate which features are required to use certain APIs. "
-# https://stackoverflow.com/questions/70632072/conditional-unstable-rustc-feature
+
+[package.metadata.docs.rs]
+# Which feature flags to pass when building docs
+features = ["nightly"]
+cargo-args = ["+nightly"]
