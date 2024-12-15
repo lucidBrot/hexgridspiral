@@ -23,7 +23,7 @@ However, most other use-cases benefit greatly from the Cube Coordinates outlined
 
 ## Usage
 
-[crates.io](https://crates.io/crates/hexgridspiral) [documentation](https://docs.rs/crate/hexgridspiral/0.1.0)
+[crates.io](https://crates.io/crates/hexgridspiral) [documentation](https://docs.rs/crate/hexgridspiral/)
 
 Ideally have a look at the code - many features are only implemented on either `HGSTile` or `CCTile`, between which you can convert with `.into()`. `HGSTile` is related to spirals and rings, `CCTile`  has a solid coordinate system to perform arithmetic in.
 
@@ -47,7 +47,7 @@ let corner0_hgs = HGSTile::new(Ring::new(2.into()).corner(RingCornerIndex::BOTTO
 ```toml
 # Cargo.toml:
 [dependencies]
-hexgridspiral = { version = "0.1.0", features = ["nightly"] }
+hexgridspiral = { version = "0.1", features = ["nightly"] }
 ```
 
 The feature `nightly` gates some code that only works when compiled with the nightly rust toolchain. Omit it if you need to build in stable rust. (Currently the only thing you lose is ability to iterate over `MovementRange` or some `..=` range between two `TileIndex`.)
