@@ -7,7 +7,7 @@
 
 * My main contribution is **efficiently finding the ring-index** in HexGridSpiral-Space (HGS).
 
-However, most other use-cases benefit greatly from the Cube Coordinates outlined in [this redblobgames article](https://www.redblobgames.com/grids/hexagons/#distances-cube). This repo also implements
+However, most other use-cases benefit greatly from the Cube Coordinates outlined in [this amazing redblobgames article](https://www.redblobgames.com/grids/hexagons/#distances-cube) by Amit Patel. This repo also implements
 
 * Conversion to **Cube Coordinates** for efficient **Neighbour** finding
 * A **Distance** between tiles in grid steps
@@ -93,3 +93,30 @@ There is the usual `cargo doc`  documentation.
 I really believe that the function names should already tell what everything does, so as a first step I'd advise you to skim the code for function names you might want to use.
 
 I intend to add examples later on, once I have actually used this crate myself.
+
+## Citing
+
+If you'd like to cite this repo, you can copy-paste this:
+
+```bibtex
+@misc{Mink_2024, 
+  title={Hexgridspiral}, 
+  url={https://github.com/lucidBrot/hexgridspiral},
+  journal={GitHub}, 
+  author={Mink, Eric Lucidbrot}, 
+  year={2024}} 
+```
+
+You'll very likely also want to reference the [Red Blob Games Article on Hexagonal Grids](https://www.redblobgames.com/grids/hexagons/#reflection) that informed everything except the spiral part of this implementation.
+
+```bibtex
+@misc{Patel_2013,
+ title={Hexagonal Grids},
+ url={https://www.redblobgames.com/grids/hexagons}, 
+ journal={Red Blob Games},
+ author={Patel, Amit}, 
+ year={2013}, month={Mar}} 
+```
+
+
+

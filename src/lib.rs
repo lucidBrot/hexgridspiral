@@ -849,6 +849,9 @@ impl CCTile {
 
     /// Reflect the tile to the other side of the line where the specified axis remains constant.
     /// Applies multiple times if multiple orders are specified, in order Q,R,S.
+    /// > "To reflect over a line that's not at 0, pick a reference point on that line. Subtract the reference point, perform the reflection, then add the reference point back."
+    /// > -- [](https://www.redblobgames.com/grids/hexagons/#reflection)
+    // TODO: Read all comments on the redblobgames post.
     pub fn reflect_orthogonally_across_constant_axis(&self, q_: bool, r_: bool, s_: bool) -> CCTile {
         self.reflect_along_constant_axis(q_, r_, s_).reflect_diagonally()
     }
@@ -860,6 +863,32 @@ impl CCTile {
     }
 
     // TODO: implement reflect_* versions for non-origin line.
+    /// Reflections like done with [Self::reflect_orthogonally_across_constant_axis],
+    /// [Self::reflect_along_constant_axis], and [Self::reflect_diagonally], but with a reference point that is not necessarily the origin.
+    ///
+    /// This is done by subtracting a tile on the line (the reference point), reflecting as usual, and then adding the tile again.
+    ///
+    /// Usage will look like this:
+    /// ```rust
+    /// use hexgridspiral::CCTile;
+    /// let tile1 = CCTile::from_qrs(1, -1, 0);
+    /// // We want to reflect across the line where r == 1
+    /// // so we choose an arbitrary tile on that line.
+    /// let r = 1;
+    /// let arbitrary_q = 10;
+    /// let reference_point = CCTile::from_qr(arbitrary_q, r);
+    ///
+    /// let reflected_tile1: CCTile = tile1.reflect_with_reference_point(&reference_point,
+    ///     |t: &CCTile | {t.reflect_orthogonally_across_constant_axis(false, true, false)}
+    /// );
+    /// assert_eq!(reflected_tile1, CCTile::from_qrs(-1, 3, -2));
+    /// ```
+    pub fn reflect_with_reference_point(&self, reference_point: &CCTile, reflection_fn: fn(&CCTile) -> CCTile) -> CCTile {
+        let shifted = *self - *reference_point;
+        let reflected = reflection_fn(&shifted);
+        let unshifted = reflected + *reference_point;
+        unshifted
+    }
 
     pub fn spiral_steps(&self, steps: i64) -> Self {
         let ht: HGSTile = (*self).into();
