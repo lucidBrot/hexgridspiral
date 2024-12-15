@@ -11,7 +11,6 @@ include = [
 repository = "https://github.com/lucidBrot/hexgridspiral"
 readme = "./README.md"
 license = "MIT OR Apache-2.0"
-# TODO: author, description, keywords, categories
 # crates.io accepts at most 5 keywords
 keywords = ["hexgrid", "hexagonal", "grid", "spiral", "tile"]
 categories = ["mathematics", "game-development", "data-structures", "science::geo"]
@@ -28,3 +27,12 @@ derive_more = { version = "1", features = ["from", "add", "mul", "into", "displa
 num_enum = {version = "0.7.3"}
 # Floating-Point Comparison for Tests.
 approx_eq = { version = "0.1" }
+cfg-if = "1.0.0"
+
+[features]
+# Gating functionality that only compiles with nightly rust.
+nightly = []
+# TODO: Add nightly feature-gates like https://stackoverflow.com/a/58480230/2550406
+# Features: https://doc.rust-lang.org/cargo/reference/features.html
+# "Note: Rustdoc has experimental support for annotating the documentation to indicate which features are required to use certain APIs. "
+# https://stackoverflow.com/questions/70632072/conditional-unstable-rustc-feature

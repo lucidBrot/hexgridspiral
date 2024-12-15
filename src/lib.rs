@@ -7,10 +7,9 @@
 //
 // Each ring has a unique integer ring-index (n) that is equal to that ring's side-length in hexes (including both corners).
 // Given the ring-index n, we can compute the max and min tile-index inside the ring.
-#![feature(iter_chain)]
-#![feature(step_trait)]
-#![feature(coroutines)]
-#![feature(iter_from_coroutine)]
+#![cfg_attr(feature = "nightly", feature(step_trait))]
+#![cfg_attr(feature = "nightly", feature(coroutines))]
+#![cfg_attr(feature = "nightly", feature(iter_from_coroutine))]
 #![feature(impl_trait_in_assoc_type)]
 // TODO: Get rid of all dependencies on nightly, to make the crate build with stable rust.
 
@@ -25,6 +24,7 @@ use std::ops;
 )]
 pub struct TileIndex(pub u64);
 
+#[cfg(feature = "nightly")]
 impl std::iter::Step for TileIndex {
     fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
         return if end < start {
@@ -1112,6 +1112,7 @@ impl MovementRange {
             && self.s_min <= tile.s
     }
 
+    #[cfg(feature = "nightly")]
     pub fn count_tiles(&self) -> usize {
         let mut count = 0;
         for _ in *self {
@@ -1121,6 +1122,8 @@ impl MovementRange {
     }
 }
 
+cfg_if::cfg_if! {
+    if #[cfg(feature = "nightly")] {
 impl IntoIterator for MovementRange {
     type Item = CCTile;
     type IntoIter = impl Iterator<Item = Self::Item>;
@@ -1146,6 +1149,7 @@ impl IntoIterator for MovementRange {
                     // choose the less extreme maximum
                     let r_max = i64::min(self.r_max, -q - self.s_min);
                     for r in r_min..=r_max {
+                        #[cfg(feature = "nightly")]
                         yield CCTile::from_qr(q, r);
                     }
                 }
@@ -1154,6 +1158,9 @@ impl IntoIterator for MovementRange {
         it
     }
 }
+
+    }
+    }
 
 // Conversion from HexGridSpiral to Cube Coordinates:
 // We can easily get the previous corner.
@@ -1452,6 +1459,7 @@ mod test {
         assert_eq!(rci_vec[1], RingCornerIndex::BOTTOMLEFT);
     }
 
+    #[cfg(feature = "nightly")]
     #[test]
     fn test_ring_index_for_tile_index_small() {
         for ring_index in 1..3 {
