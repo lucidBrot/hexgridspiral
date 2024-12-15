@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 include = [
     "**/*.rs",
-    "Cargo.toml",
-    "README.md",
-    "README.assets/*",
+    "./Cargo.toml",
+    "./README.md",
+    "./README.assets/*",
 ]
 repository = "https://github.com/lucidBrot/hexgridspiral"
 readme = "./README.md"
