@@ -19,6 +19,7 @@ However, most other use-cases benefit greatly from the Cube Coordinates outlined
 * **Addition**, Subtraction of tiles
 * Which **Wedge** of the world (pizza slice) a tile is in
 * Which Tiles are in **Movement Range** and **Intersecting** Movement Ranges.
+* **Reflection** along or acress axes, vertically and horizontally, and diagonally.
 
 ## Usage
 
@@ -93,6 +94,20 @@ There is the usual `cargo doc`  documentation.
 I really believe that the function names should already tell what everything does, so as a first step I'd advise you to skim the code for function names you might want to use.
 
 I intend to add examples later on, once I have actually used this crate myself.
+
+## Alternative Crates
+
+I have not used them, but if this crate does not fulfill your needs, there are some others on crates.io. They are unlikely to feature the mapping from spiral indices to cube coordinates, but might have other features that make them stand out. For your convenience, a few links:  
+
+* [hexagonal_pathfinding_astar](https://crates.io/crates/hexagonal_pathfinding_astar)
+  * A-Star Pathfinding
+* [hexing](https://crates.io/crates/hexing)
+  * Hexagonal Bounding Boxes
+  * Serialization and Deserialization
+* [hexx](https://crates.io/crates/hexx)
+  * Conversion from Axial Coordinates to cubic, doubled, hexmod, and offset coordinates.
+* [beehive](https://crates.io/crates/beehive)
+  * 3D Hexagonal Tiles
 
 ## Citing
 
