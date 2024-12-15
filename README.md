@@ -1,6 +1,6 @@
 # HexGridSpiral
 
-* A Coordinate System for hexagonal maps
+* A Coordinate System for **hexagonal** maps with support for the usual coordinate-system operations
 * Each tile is identified by a  **single unique integer**
 * Tile indices start at 0 and **spiral outwards**
 * Ideal for e.g. a Level Selection Screen because the level number maps directly to a hex tile without scattering them all over the place.

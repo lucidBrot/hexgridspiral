@@ -15,6 +15,8 @@ license = "MIT OR Apache-2.0"
 # crates.io accepts at most 5 keywords
 keywords = ["hexgrid", "hexagonal", "grid", "spiral", "tile"]
 categories = ["mathematics", "game-development", "data-structures", "science::geo"]
+authors = ["Eric Mink" ]
+description = "Hexagonal Cube-Coordinate System with Spiralling Integer Tile Identifiers"
 
 [dependencies]
 rand = { version = "0.8.5" }
