@@ -1523,8 +1523,6 @@ mod test {
     }
 
     cfg_if::cfg_if! {if #[cfg(feature = "nightly")] {
-    #[cfg(any(feature = "nightly", doc))]
-    #[doc(cfg(feature = "nightly"))]
     #[test]
     fn test_ring_index_for_tile_index_small() {
         for ring_index in 1..3 {
@@ -1876,6 +1874,7 @@ mod test {
         }
     }
 
+    #[cfg(feature = "nightly")]
     #[test]
     fn test_movement_range() {
         for h in [0, 1, 2, 4, 5, 6, 7, 10, 27, 100] {
@@ -1900,6 +1899,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(feature = "nightly")]
     fn test_movement_range_intersection() {
         let tile_a = CCTile::origin() + CCTile::unit(&RingCornerIndex::LEFT);
         let tile_b = CCTile::origin() + CCTile::unit(&RingCornerIndex::RIGHT) * 2;
