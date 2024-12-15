@@ -44,10 +44,10 @@ let corner0_hgs = HGSTile::new(ring.corner(&RingCornerIndex::BOTTOMLEFT));
 ```toml
 # Cargo.toml:
 [dependencies]
-hexgridspiral = { version = "0.1.0" }
+hexgridspiral = { version = "0.1.0", features = ["nightly"] }
 ```
 
-TODO: Actually publish that crate so this installation step actually works.
+The feature `nightly` gates some code that only works when compiled with the nightly rust toolchain. Omit it if you need to build in stable rust. (Currently the only thing you lose is ability to iterate over `MovementRange` or some `..=` range between two `TileIndex`.)
 
 ### For Development
 

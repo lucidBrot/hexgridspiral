@@ -7,11 +7,13 @@
 //
 // Each ring has a unique integer ring-index (n) that is equal to that ring's side-length in hexes (including both corners).
 // Given the ring-index n, we can compute the max and min tile-index inside the ring.
+
+// We have code that uses the nightly toolchain. It is gated behind the "nightly" crate feature flag.
+// This means the crate can still be used with stable rust - it will just not have all functions.
 #![cfg_attr(feature = "nightly", feature(step_trait))]
 #![cfg_attr(feature = "nightly", feature(coroutines))]
 #![cfg_attr(feature = "nightly", feature(iter_from_coroutine))]
-#![feature(impl_trait_in_assoc_type)]
-// TODO: Get rid of all dependencies on nightly, to make the crate build with stable rust.
+#![cfg_attr(feature = "nightly", feature(impl_trait_in_assoc_type))]
 
 // The objects Tile, Ring, TileIndex, RingIndex are not supposed to be mutated.
 // Instead, (they) make new objects.
@@ -1122,8 +1124,7 @@ impl MovementRange {
     }
 }
 
-cfg_if::cfg_if! {
-    if #[cfg(feature = "nightly")] {
+cfg_if::cfg_if! {if #[cfg(feature = "nightly")] {
 impl IntoIterator for MovementRange {
     type Item = CCTile;
     type IntoIter = impl Iterator<Item = Self::Item>;
@@ -1158,9 +1159,7 @@ impl IntoIterator for MovementRange {
         it
     }
 }
-
-    }
-    }
+}}
 
 // Conversion from HexGridSpiral to Cube Coordinates:
 // We can easily get the previous corner.
