@@ -28,6 +28,7 @@ Ideally have a look at the code - many features are only implemented on either `
 Here are some ways to **construct** tiles:  
 
 ```rust
+use hexgridspiral::{CCTile, HGSTile, RingCornerIndex, Ring};
 let tile1 = CCTile::unit(&RingCornerIndex::RIGHT);
 let tile2 = CCTile::unit(&RingCornerIndex::TOPRIGHT);
 assert_eq!(tile1.euclidean_distance_to(&tile1), 0.);
@@ -36,7 +37,7 @@ let tile7: CCTile = HGSTile::make(7).into();
 let tileo : CCTile = CCTile::origin();
 assert_eq!(tile7.euclidean_distance_sq(&tileo), 3);
 
-let corner0_hgs = HGSTile::new(ring.corner(&RingCornerIndex::BOTTOMLEFT));
+let corner0_hgs = HGSTile::new(Ring::new(2.into()).corner(RingCornerIndex::BOTTOMLEFT));
 ```
 
 ## Installation
@@ -89,7 +90,7 @@ These two coordinate systems use almost exclusively integers. But sometimes you 
 
 ## Documentation
 
-There is the usual `cargo doc`  documentation.
+There is the usual `cargo doc`  documentation. Use `cargo +nightly doc --feature nightly` to see all available docs, including the ones that do not work in stable rust.
 
 I really believe that the function names should already tell what everything does, so as a first step I'd advise you to skim the code for function names you might want to use.
 

@@ -1,13 +1,67 @@
-// In this file, I propose a grid system I came up with independently.
-// The hexagonal grid assigns each tile a unique integer index (h) that increments, spiralling outwards.
-// This means that incrementing equals walking along the spiral.
-//
-// The spiral can be split into conceptual rings. Each ring consists of tiles that are consecutively numbered.
-// All tiles that lie on the horizontal ray going from the origin tile to the right are assigned an index that is the largest in that ring. To the top-left of that tile is the smallest index in that ring. This is assuming tiling with peaky-top regular hexagons.
-//
-// Each ring has a unique integer ring-index (n) that is equal to that ring's side-length in hexes (including both corners).
-// Given the ring-index n, we can compute the max and min tile-index inside the ring.
+/*!
 
+* A Coordinate System for **hexagonal** maps with support for the usual coordinate-system operations
+* Each tile is identified by a  **single unique integer**
+* Tile indices start at 0 and **spiral outwards**
+* Ideal for e.g. a Level Selection Screen because the level number maps directly to a hex tile without scattering them all over the place.
+
+* My main contribution is **efficiently finding the ring-index** in HexGridSpiral-Space (HGS).
+
+However, most other use-cases benefit greatly from the Cube Coordinates outlined in [this amazing redblobgames article](https://www.redblobgames.com/grids/hexagons/#distances-cube) by Amit Patel. This repo also implements
+
+* Conversion to **Cube Coordinates** for efficient **Neighbour** finding
+* A **Distance** between tiles in grid steps
+* **Vector Calculus**
+  You can subtract two tiles to get a vector and apply it to a different tile.  You can scale vectors by multiplication.
+* A **Euclidean Norm** ([Xiangguo Li 2013](https://www.researchgate.net/publication/235779843_Storage_and_addressing_scheme_for_practical_hexagonal_image_processing))
+* Conversion to **Cartesian Pixel Coordinates**
+* Rotation by 60 degrees around the origin
+* **Addition**, Subtraction of tiles
+* Which **Wedge** of the world (pizza slice) a tile is in
+* Which Tiles are in **Movement Range** and **Intersecting** Movement Ranges.
+* **Reflection** along or acress axes, vertically and horizontally, and diagonally.
+
+## Hex Grid Spiral
+The hexagonal grid assigns each tile a unique integer index (h) that increments, spiralling outwards.
+This means that incrementing equals walking along the spiral.
+
+The spiral can be split into conceptual rings. Each ring consists of tiles that are consecutively numbered.
+All tiles that lie on the horizontal ray going from the origin tile to the right are assigned an index that is the largest in that ring. To the top-left of that tile is the smallest index in that ring. This is assuming tiling with peaky-top regular hexagons.
+
+Each ring has a unique integer ring-index (n) that is equal to that ring's side-length in hexes (including both corners).
+Given the ring-index n, we can compute the max and min tile-index inside the ring.
+
+## Usage
+
+Ideally have a look at the code - many features are only implemented on either `HGSTile` or `CCTile`, between which you can convert with `.into()`. `HGSTile` is related to spirals and rings, `CCTile`  has a solid coordinate system to perform arithmetic in.
+
+Here are some ways to **construct** tiles:
+
+```rust
+use hexgridspiral::{CCTile, HGSTile, RingCornerIndex, Ring};
+let tile1 = CCTile::unit(&RingCornerIndex::RIGHT);
+let tile2 = CCTile::unit(&RingCornerIndex::TOPRIGHT);
+assert_eq!(tile1.euclidean_distance_to(&tile1), 0.);
+
+let tile7: CCTile = HGSTile::make(7).into();
+let tileo : CCTile = CCTile::origin();
+assert_eq!(tile7.euclidean_distance_sq(&tileo), 3);
+
+let corner0_hgs = HGSTile::new(Ring::new(2.into()).corner(RingCornerIndex::BOTTOMLEFT));
+```
+
+## Installation
+
+```toml
+# Cargo.toml:
+[dependencies]
+hexgridspiral = { version = "0.1.0", features = ["nightly"] }
+```
+
+The feature `nightly` gates some code that only works when compiled with the nightly rust toolchain. Omit it if you need to build in stable rust. (Currently the only thing you lose is ability to iterate over `MovementRange` or some `..=` range between two `TileIndex`.)
+
+Please read the [README](https://github.com/lucidBrot/hexgridspiral) (or the code), since this docs section duplicates it, chances are high that one or the other will be outdated...
+*/
 // We have code that uses the nightly toolchain. It is gated behind the "nightly" crate feature flag.
 // This means the crate can still be used with stable rust - it will just not have all functions.
 #![cfg_attr(feature = "nightly", feature(step_trait))]
