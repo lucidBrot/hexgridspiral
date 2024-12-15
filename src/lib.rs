@@ -33,7 +33,7 @@ impl std::iter::Step for TileIndex {
         } else {
             match usize::try_from((*end - *start).value() as usize) {
                 // The happy path:
-                Result::Ok(value) => {(value, Some(value))},
+                Result::Ok(value) => (value, Some(value)),
                 // Returns (usize::MAX, None) if the number of steps would overflow usize, or is infinite.
                 Result::Err(_) => (usize::MAX, None),
             }
@@ -1894,7 +1894,7 @@ mod test {
     }
 
     #[test]
-    fn test_grid_distance_to (){
+    fn test_grid_distance_to() {
         let tile_left = CCTile::unit(&RingCornerIndex::LEFT);
         let tile_right = CCTile::unit(&RingCornerIndex::RIGHT);
         assert_eq!(tile_left.grid_distance_to(&tile_right), 2);
