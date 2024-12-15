@@ -1,4 +1,4 @@
-# This gives access to the latest performance improvements and "unstable" optimizations, including generic sharing.
+# This gives access to the latest performance improvements and "unstable" optimizations
 [toolchain]
 channel = "nightly"
 

@@ -12,6 +12,7 @@
 #![feature(coroutines)]
 #![feature(iter_from_coroutine)]
 #![feature(impl_trait_in_assoc_type)]
+// TODO: Get rid of all dependencies on nightly, to make the crate build with stable rust.
 
 // The objects Tile, Ring, TileIndex, RingIndex are not supposed to be mutated.
 // Instead, (they) make new objects.
