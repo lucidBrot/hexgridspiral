@@ -1,6 +1,6 @@
 [package]
 name = "hexgridspiral"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 include = [
     "**/*.rs",
@@ -16,6 +16,7 @@ keywords = ["hexgrid", "hexagonal", "grid", "spiral", "tile"]
 categories = ["mathematics", "game-development", "data-structures", "science::geo"]
 authors = ["Eric Mink" ]
 description = "Hexagonal Cube-Coordinate System with Spiralling Integer Tile Identifiers"
+rust-version = "1.85"
 
 [dependencies]
 rand = { version = "0.8.5" }
