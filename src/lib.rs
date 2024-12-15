@@ -26,12 +26,21 @@ use std::ops;
 pub struct TileIndex(pub u64);
 
 impl std::iter::Step for TileIndex {
-    fn steps_between(start: &Self, end: &Self) -> Option<usize> {
+    fn steps_between(start: &Self, end: &Self) -> (usize, Option<usize>) {
         return if end < start {
-            None
+            // End < Start is illegal : https://doc.rust-lang.org/nightly/std/iter/trait.Step.html#tymethod.steps_between
+            (0, None)
         } else {
-            usize::try_from((*end - *start).value() as usize).ok()
+            match usize::try_from((*end - *start).value() as usize) {
+                // The happy path:
+                Result::Ok(value) => {(value, Some(value))},
+                // Returns (usize::MAX, None) if the number of steps would overflow usize, or is infinite.
+                Result::Err(_) => (usize::MAX, None),
+            }
         };
+
+        // This is currently a (lower-bound, upper-bound) tuple in nightly, "like size_hint".
+        // It is exactly defined when the `n` must be `0` or `n` or `usize::max`. The rest seems not too relevant.
     }
 
     fn forward_checked(start: Self, count: usize) -> Option<Self> {
@@ -1882,5 +1891,19 @@ mod test {
         assert_eq!(tile_ortho_s, (3, -4, 1).into());
         let tile_ortho_q = tile.reflect_orthogonally_across_constant_axis(true, false, false);
         assert_eq!(tile_ortho_q, (-4, 1, 3).into());
+    }
+
+    #[test]
+    fn test_grid_distance_to (){
+        let tile_left = CCTile::unit(&RingCornerIndex::LEFT);
+        let tile_right = CCTile::unit(&RingCornerIndex::RIGHT);
+        assert_eq!(tile_left.grid_distance_to(&tile_right), 2);
+        let tile1 = CCTile::from_qrs(1, 2, -3);
+        assert_eq!(tile1.grid_distance_to(&tile_right), 2);
+        assert_eq!(tile_right.grid_distance_to(&tile1), 2);
+        assert_eq!(tile1.grid_distance_to(&tile1), 0);
+        assert_eq!(tile1.grid_distance_to(&tile_left), 4);
+        let tile2 = CCTile::from_qrs(-3, 2, 1);
+        assert_eq!(tile2.grid_distance_to(&tile1), 4);
     }
 }
