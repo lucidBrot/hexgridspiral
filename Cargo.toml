@@ -1,6 +1,6 @@
 [package]
 name = "hexgridspiral"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 include = [
     "**/*.rs",
@@ -10,6 +10,7 @@ include = [
     "./changelog.md",
 ]
 repository = "https://github.com/lucidBrot/hexgridspiral"
+documentation = "https://docs.rs/crate/hexgridspiral/latest"
 readme = "./README.md"
 license = "MIT OR Apache-2.0"
 # crates.io accepts at most 5 keywords

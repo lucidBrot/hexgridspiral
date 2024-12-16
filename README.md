@@ -72,9 +72,9 @@ hexgridspiral = {path = "../hexgridspiral"}
 
 On top of this, we add a spiral system of integers (`HGSTile`).
 
-| Cube Coordinates (`CCTile`)                                  | Hex Grid Spiral (`HGSTile`)     |
-| ------------------------------------------------------------ | ------------------------------- |
-| ![image-20241208105942125](./README.assets/image-20241208105942125.png) | ![](./README.assets/spiral.png) |
+| Cube Coordinates (`CCTile`)                                  | Hex Grid Spiral (`HGSTile`)                                  |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| ![](https://github.com/lucidBrot/hexgridspiral/raw/prod/README.assets/image-20241208105942125.png) | ![](https://github.com/lucidBrot/hexgridspiral/raw/prod/README.assets/spiral.png) |
 
 So for example:
 
