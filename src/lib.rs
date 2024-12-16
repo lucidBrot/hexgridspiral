@@ -306,6 +306,7 @@ impl RingCornerIndex {
         let v2 = match v {
             0..=4 => v + 1,
             5 => 0,
+            // TODO: Replace all panics and unwraps with actual error handling where possible.
             6_u8..=u8::MAX => panic!("Invalid corner index used as start."),
         };
         TryInto::<RingCornerIndex>::try_into(v2).unwrap()
@@ -318,9 +319,9 @@ impl RingCornerIndex {
     // See https://blog.rust-lang.org/2024/10/17/Rust-1.82.0.html
     // the "Precise captures use" section.
     pub fn all_from(
-        start: &RingCornerIndex,
+        start: RingCornerIndex,
     ) -> impl std::iter::Iterator<Item = RingCornerIndex> + use<'_> {
-        let mut ctr = start.clone();
+        let mut ctr = start;
         let mut done = false;
         std::iter::from_fn(move || {
             ctr = ctr.next();
