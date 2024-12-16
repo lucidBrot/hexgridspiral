@@ -313,14 +313,12 @@ impl RingCornerIndex {
     }
 
     pub fn all() -> impl std::iter::Iterator<Item = RingCornerIndex> {
-        Self::all_from(&Self::RIGHT)
+        Self::all_from(Self::RIGHT)
     }
 
     // See https://blog.rust-lang.org/2024/10/17/Rust-1.82.0.html
     // the "Precise captures use" section.
-    pub fn all_from(
-        start: RingCornerIndex,
-    ) -> impl std::iter::Iterator<Item = RingCornerIndex> + use<'_> {
+    pub fn all_from(start: RingCornerIndex) -> impl std::iter::Iterator<Item = RingCornerIndex> {
         let mut ctr = start;
         let mut done = false;
         std::iter::from_fn(move || {
@@ -328,7 +326,7 @@ impl RingCornerIndex {
             if done {
                 return None;
             }
-            if ctr == *start {
+            if ctr == start {
                 done = true;
             };
             return Some(ctr);
@@ -1717,7 +1715,7 @@ mod test {
     fn test_rot60_cc() {
         // test all corners
         let mut i = 0;
-        for r in RingCornerIndex::all_from(&RingCornerIndex::BOTTOMLEFT) {
+        for r in RingCornerIndex::all_from(RingCornerIndex::BOTTOMLEFT) {
             i += 1;
             let t = CCTile::unit(&r) * i;
             let q = CCTile::unit(&r.next()) * i;
