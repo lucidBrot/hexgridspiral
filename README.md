@@ -23,7 +23,7 @@ However, most other use-cases benefit greatly from the Cube Coordinates outlined
 
 ## Usage
 
-[crates.io](https://crates.io/crates/hexgridspiral) [documentation](https://docs.rs/crate/hexgridspiral/)
+[crates.io](https://crates.io/crates/hexgridspiral) [documentation](https://docs.rs/crate/hexgridspiral/) [changelog](./changelog.md)
 
 Ideally have a look at the code - many features are only implemented on either `HGSTile` or `CCTile`, between which you can convert with `.into()`. `HGSTile` is related to spirals and rings, `CCTile`  has a solid coordinate system to perform arithmetic in.
 

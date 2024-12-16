@@ -7,6 +7,7 @@ include = [
     "./Cargo.toml",
     "./README.md",
     "./README.assets/*",
+    "./changelog.md",
 ]
 repository = "https://github.com/lucidBrot/hexgridspiral"
 readme = "./README.md"
