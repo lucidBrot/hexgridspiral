@@ -19,7 +19,7 @@ However, most other use-cases benefit greatly from the Cube Coordinates outlined
 * **Addition**, Subtraction of tiles
 * Which **Wedge** of the world (pizza slice) a tile is in
 * Which Tiles are in **Movement Range** and **Intersecting** Movement Ranges.
-* **Reflection** along or acress axes, vertically and horizontally, and diagonally.
+* **Reflection** along or across axes, vertically and horizontally, and diagonally.
 
 ## Usage
 
@@ -92,9 +92,9 @@ These two coordinate systems use almost exclusively integers. But sometimes you 
 
 ## Documentation
 
-There is the usual `cargo doc`  documentation. Use `cargo +nightly doc --feature nightly` to see all available docs, including the ones that do not work in stable rust.
+There is the usual `cargo doc`  [documentation](https://docs.rs/crate/hexgridspiral/). Use `cargo +nightly doc --feature nightly` to see all available docs, including the ones that do not work in stable rust.
 
-I really believe that the function names should already tell what everything does, so as a first step I'd advise you to skim the code for function names you might want to use.
+I really believe that the function names should already tell what everything does, so as a first step I'd advise you to skim the code for function names you might want to use. The tests are some tiny examples.
 
 I intend to add examples later on, once I have actually used this crate myself.
 

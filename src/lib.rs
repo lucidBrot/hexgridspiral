@@ -1,3 +1,12 @@
+/*!
+Hexagonal Cube-Coordinate System with Spiralling Integer Tile Identifiers
+
+Read the [README](https://github.com/lucidBrot/hexgridspiral) for
+* an Abstract
+* Construction Examples
+* A list of Features
+
+*/
 // We have code that uses the nightly toolchain. It is gated behind the "nightly" crate feature flag.
 // This means the crate can still be used with stable rust - it will just not have all functions.
 #![cfg_attr(feature = "nightly", feature(step_trait))]
