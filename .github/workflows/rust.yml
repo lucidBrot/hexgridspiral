@@ -1,0 +1,59 @@
+name: Rust
+
+on:
+  # Trigger on tag
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  # Trigger on PR
+  pull_request:
+    branches: [ "prod" ]
+  # Manual Activation is possible
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  test_nightly:
+      name: Test Rust Nightly on ${{ matrix.os }}
+      runs-on: ${{ matrix.os }}
+      strategy:
+        fail-fast: false
+        matrix:
+          include:
+            - { rust: nightly,          os: ubuntu-latest }
+      steps:
+      - uses: actions/checkout@v4
+        with:
+            rust-version: ${{ matrix.rust }}
+      - name: Build
+        run: cargo +nightly build --verbose --features nightly
+      - name: Run tests
+        run: cargo +nightly test --verbose --features nightly
+      - name: Build docs
+        run: cargo +nightly doc --verbose --features nightly
+
+  test_stable:
+      name: Test Rust Stable on ${{ matrix.os }}
+      runs-on: ${{ matrix.os }}
+      strategy:
+        fail-fast: true
+        matrix:
+          include:
+            - { rust: stable,           os: ubuntu-latest }
+            - { rust: stable,           os: macos-latest }
+            - { rust: stable,           os: windows-latest }
+
+      steps:
+      - uses: actions/checkout@v4
+        with:
+            rust-version: ${{ matrix.rust }}
+      - name: Build
+        run: cargo +stable build --verbose
+      - name: Run tests
+        run: cargo +stable test --verbose
+      - name: Build docs
+        run: cargo +stable doc --verbose
+        
