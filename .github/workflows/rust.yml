@@ -26,6 +26,7 @@ jobs:
             - { rust: nightly,          os: ubuntu-latest }
       steps:
       - uses: actions/checkout@v4
+      - uses: hecrj/setup-rust-action@v2
         with:
             rust-version: ${{ matrix.rust }}
       - name: Build
@@ -48,6 +49,7 @@ jobs:
 
       steps:
       - uses: actions/checkout@v4
+      - uses: hecrj/setup-rust-action@v2
         with:
             rust-version: ${{ matrix.rust }}
       - name: Build
