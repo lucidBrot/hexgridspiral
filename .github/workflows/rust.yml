@@ -43,9 +43,9 @@ jobs:
         fail-fast: true
         matrix:
           include:
-            - { rust: 1.85,           os: ubuntu-latest }
-            - { rust: 1.85,           os: macos-latest }
-            - { rust: 1.85,           os: windows-latest }
+            - { rust: 1.85.0,           os: ubuntu-latest }
+            - { rust: 1.85.0,           os: macos-latest }
+            - { rust: 1.85.0,           os: windows-latest }
 
       steps:
       - uses: actions/checkout@v4
