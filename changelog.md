@@ -1,6 +1,9 @@
 # Changelog
 Best-Effort (Means: worst-effort, actually).
 
+## v0.3.0
+* Fix [issue-1](https://github.com/lucidBrot/hexgridspiral/issues/2): Conversions from `CCTile` to `HGSTile` were incorrect for non-corner tiles in the top-right region.
+
 ## v0.2.8
 * Add `serde` dependency and implement `Serialize` and `Deserialize` on most types.
 
