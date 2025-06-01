@@ -20,11 +20,26 @@ Read the [README](https://github.com/lucidBrot/hexgridspiral) for
 use derive_more::with_trait::Sub;
 use derive_more::{Add, Display, From, Into, Mul, Neg};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
+use serde::{Deserialize, Serialize};
 use std::ops;
-use serde::{Serialize, Deserialize};
 
 #[derive(
-    Debug, Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Add, Sub, Mul, Display, From, Into, Hash, Serialize, Deserialize
+    Debug,
+    Copy,
+    Clone,
+    PartialOrd,
+    Ord,
+    PartialEq,
+    Eq,
+    Add,
+    Sub,
+    Mul,
+    Display,
+    From,
+    Into,
+    Hash,
+    Serialize,
+    Deserialize,
 )]
 pub struct TileIndex(pub u64);
 
@@ -180,7 +195,22 @@ pub struct HGSTile {
 /// Towards the right, `r` stays constant and is *positive* on the bottom side.
 /// Towards the top-right, `s` stays constant and is negative on the bottom side.
 // TODO: Division is not implemented for CCTile. If needed, it should yield a CCTileFloat type.
-#[derive(Debug, Copy, Clone, PartialEq, Display, From, Into, Eq, Neg, Add, Mul, Sub, Serialize, Deserialize)]
+#[derive(
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    Display,
+    From,
+    Into,
+    Eq,
+    Neg,
+    Add,
+    Mul,
+    Sub,
+    Serialize,
+    Deserialize,
+)]
 #[display("CCTile: ({q}, {r},{s})")]
 pub struct CCTile {
     q: i64,
@@ -314,7 +344,9 @@ impl HGSTile {
         let ring_size = self.ring.size();
         let ring_min = self.ring_min();
         let current_offset_in_ring = self.h.value() - ring_min.h.value();
-        let new_offset_in_ring = (current_offset_in_ring + (steps.rem_euclid(ring_size as i64) as u64)).rem_euclid(ring_size);
+        let new_offset_in_ring = (current_offset_in_ring
+            + (steps.rem_euclid(ring_size as i64) as u64))
+            .rem_euclid(ring_size);
         Self::new(ring_min.h + new_offset_in_ring)
     }
 
@@ -1336,15 +1368,19 @@ mod test {
         // Get TileIndex from hgs
         let hgs_from_cc_from_hgs: HGSTile = cc_37_from_hgs.into();
         let h_37_from_cc_from_hgs = hgs_from_cc_from_hgs.h;
-        assert_eq!(h_37_from_cc_from_hgs, TileIndex(37), "TileIndex was wrong (cc from hgs)");
+        assert_eq!(
+            h_37_from_cc_from_hgs,
+            TileIndex(37),
+            "TileIndex was wrong (cc from hgs)"
+        );
 
         // Get TileIndex from qr
-        let hgs_37_from_qr : HGSTile = cc_37_from_qr.into();
+        let hgs_37_from_qr: HGSTile = cc_37_from_qr.into();
         let h_37_from_qr = hgs_37_from_qr.h;
         assert_eq!(h_37_from_qr, TileIndex(37), "TileIndex was wrong (qr)");
 
         // Get TileIndex from qrs
-        let hgs_37 : HGSTile = cc_37_from_qrs.into();
+        let hgs_37: HGSTile = cc_37_from_qrs.into();
         let h_37 = hgs_37.h;
         assert_eq!(h_37, TileIndex(37), "TileIndex was wrong (qrs)");
     }
@@ -1991,7 +2027,7 @@ mod test {
 
             let walk_one_circle = hgs_tile.ring_steps(ring_size);
             assert_eq!(walk_one_circle, hgs_tile);
-            let walk_two_circles = hgs_tile.ring_steps(2*ring_size);
+            let walk_two_circles = hgs_tile.ring_steps(2 * ring_size);
             assert_eq!(walk_two_circles, hgs_tile);
             let walk_backwards_one_circle = hgs_tile.ring_steps(-1 * ring_size);
             assert_eq!(walk_backwards_one_circle, hgs_tile);
@@ -2003,11 +2039,13 @@ mod test {
     }
 
     #[test]
-    fn test_circular_steps_specifics(){
-
+    fn test_circular_steps_specifics() {
         let hgs0 = HGSTile::make(0);
         let hgs0_plus_1 = hgs0.ring_steps(1);
-        assert_eq!(hgs0_plus_1, hgs0, "The origin ring should only consist of one tile.");
+        assert_eq!(
+            hgs0_plus_1, hgs0,
+            "The origin ring should only consist of one tile."
+        );
 
         // Tests for circle at ring 1
         let hgs1 = HGSTile::make(1);
@@ -2055,7 +2093,5 @@ mod test {
         assert_eq!(hgs13_minus_1.h, TileIndex(12));
         let hgs13_plus_2 = hgs13.ring_steps(2);
         assert_eq!(hgs13_plus_2.h, TileIndex(15));
-
     }
-
 }
