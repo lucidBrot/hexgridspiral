@@ -308,10 +308,9 @@ impl HGSTile {
         Self::new(TileIndex((self.h.value() as i64 + steps) as u64))
     }
 
-    /// `steps` steps along the ring, in circular fashion.
-    /// May be negative, but may not lead to a negative tile-index.
-    pub fn steps_within_ring(&self, steps: i64) -> Self {
-        assert!(steps <= self.h.value() as i64);
+    /// Moves `steps` steps along the ring, in circular fashion, counter-clockwise.
+    /// May be negative; can not lead to a negative tile-index.
+    pub fn ring_steps(&self, steps: i64) -> Self {
         let ring_size = self.ring.size();
         let ring_min = self.ring_min();
         let current_offset_in_ring = self.h.value() - ring_min.h.value();
@@ -1284,7 +1283,7 @@ impl From<&CCTile> for HGSTile {
         // issue-1: If the previous corner happens to be the ring's maximum,
         // we need to ensure we stay in the same ring.
 
-        return previous_corner_hgs.steps_within_ring(offset_along_edge_hgs as i64);
+        return previous_corner_hgs.ring_steps(offset_along_edge_hgs as i64);
     }
 }
 
@@ -1982,6 +1981,81 @@ mod test {
         assert_eq!(tile1.grid_distance_to(&tile_left), 4);
         let tile2 = CCTile::from_qrs(-3, 2, 1);
         assert_eq!(tile2.grid_distance_to(&tile1), 4);
+    }
+
+    #[test]
+    fn test_circular_steps_general() {
+        for idx in 0..=10 {
+            let hgs_tile = HGSTile::make(idx);
+            let ring_size = hgs_tile.ring.size() as i64;
+
+            let walk_one_circle = hgs_tile.ring_steps(ring_size);
+            assert_eq!(walk_one_circle, hgs_tile);
+            let walk_two_circles = hgs_tile.ring_steps(2*ring_size);
+            assert_eq!(walk_two_circles, hgs_tile);
+            let walk_backwards_one_circle = hgs_tile.ring_steps(-1 * ring_size);
+            assert_eq!(walk_backwards_one_circle, hgs_tile);
+
+            let single_step_forward = hgs_tile.ring_steps(1);
+            let single_step_backward_again = single_step_forward.ring_steps(-1);
+            assert_eq!(single_step_backward_again, hgs_tile);
+        }
+    }
+
+    #[test]
+    fn test_circular_steps_specifics(){
+
+        let hgs0 = HGSTile::make(0);
+        let hgs0_plus_1 = hgs0.ring_steps(1);
+        assert_eq!(hgs0_plus_1, hgs0, "The origin ring should only consist of one tile.");
+
+        // Tests for circle at ring 1
+        let hgs1 = HGSTile::make(1);
+        let hgs1_plus_1 = hgs1.ring_steps(1);
+        assert_eq!(hgs1_plus_1.h.value(), 1 + 1);
+        let hgs2 = HGSTile::make(2);
+        let hgs2_plus_1 = hgs2.ring_steps(1);
+        assert_eq!(hgs2_plus_1.h.value(), 2 + 1);
+        let hgs3 = HGSTile::make(3);
+        let hgs3_plus_1 = hgs3.ring_steps(1);
+        assert_eq!(hgs3_plus_1.h.value(), 3 + 1);
+        let hgs4 = HGSTile::make(4);
+        let hgs4_plus_1 = hgs4.ring_steps(1);
+        assert_eq!(hgs4_plus_1.h.value(), 4 + 1);
+        let hgs5 = HGSTile::make(5);
+        let hgs5_plus_1 = hgs5.ring_steps(1);
+        assert_eq!(hgs5_plus_1.h.value(), 5 + 1);
+        let hgs6 = HGSTile::make(6);
+        let hgs6_plus_1 = hgs6.ring_steps(1);
+        assert_eq!(hgs6_plus_1.h.value(), 1);
+
+        // Test for specific tiles
+        let hgs7 = HGSTile::make(7);
+        let hgs7_plus_1 = hgs7.ring_steps(1);
+        assert_eq!(hgs7_plus_1.h, TileIndex(8));
+        let hgs7_minus_1 = hgs7.ring_steps(-1);
+        assert_eq!(hgs7_minus_1.h, TileIndex(18));
+
+        let hgs37 = HGSTile::make(37);
+        let hgs37_plus_1 = hgs37.ring_steps(1);
+        assert_eq!(hgs37_plus_1.h, TileIndex(38));
+        let hgs37_minus_1 = hgs37.ring_steps(-1);
+        assert_eq!(hgs37_minus_1.h, TileIndex(60));
+
+        let hgs38 = HGSTile::make(38);
+        let hgs38_plus_1 = hgs38.ring_steps(1);
+        assert_eq!(hgs38_plus_1.h, TileIndex(39));
+        let hgs38_minus_1 = hgs38.ring_steps(-1);
+        assert_eq!(hgs38_minus_1.h, TileIndex(37));
+
+        let hgs13 = HGSTile::make(13);
+        let hgs13_plus_1 = hgs13.ring_steps(1);
+        assert_eq!(hgs13_plus_1.h, TileIndex(14));
+        let hgs13_minus_1 = hgs13.ring_steps(-1);
+        assert_eq!(hgs13_minus_1.h, TileIndex(12));
+        let hgs13_plus_2 = hgs13.ring_steps(2);
+        assert_eq!(hgs13_plus_2.h, TileIndex(15));
+
     }
 
 }
