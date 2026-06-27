@@ -1,6 +1,15 @@
 # Changelog
 Best-Effort (Means: worst-effort, actually).
 
+## v0.3.2
+
+* Major-Version bump of `rand` and `rand_chacha` to `0.10.0` 
+* Increase rust edition of this crate to `2024`
+
+## v0.3.1
+
+* Only `cargo update` 
+
 ## v0.3.0
 * Fix [issue-1](https://github.com/lucidBrot/hexgridspiral/issues/2): Conversions from `CCTile` to `HGSTile` were incorrect for non-corner tiles in the top-right region.
 
