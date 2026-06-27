@@ -27,10 +27,10 @@ rand_chacha = "0.10.0"
 # You can specify the types of derives that you need for less time spent
 # compiling. For the full list of features see this crate its `Cargo.toml`.
 derive_more = { version = "2", features = ["from", "add", "mul", "into", "display", "not"] }
-num_enum = {version = "0.7.3"}
+num_enum = {version = "0.7.6"}
 # Floating-Point Comparison for Tests.
 approx_eq = { version = "0.1" }
-cfg-if = "1.0.0"
+cfg-if = "1.0.4"
 # The Serialize and Deserialize traits
 serde = { version = "1.0.219", features = ["derive"] }
 
