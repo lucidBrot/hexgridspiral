@@ -20,6 +20,7 @@ Read the [README](https://github.com/lucidBrot/hexgridspiral) for
 use derive_more::with_trait::Sub;
 use derive_more::{Add, Display, From, Into, Mul, Neg};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
+use rand::RngExt;
 use serde::{Deserialize, Serialize};
 use std::ops;
 
@@ -1421,7 +1422,10 @@ mod test {
         }
         // we did six steps, so should be same as skipping one ring.
         let x2 = start.ring.next_ring().max();
-        assert!(x1.h == x2, "Six spiral-steps should equal one ring-step in the first non-origin ring, but we got {x1} and {x2}.");
+        assert!(
+            x1.h == x2,
+            "Six spiral-steps should equal one ring-step in the first non-origin ring, but we got {x1} and {x2}."
+        );
         assert!(x2.value() == 6);
     }
 
