@@ -1,6 +1,6 @@
 [package]
 name = "hexgridspiral"
-version = "0.3.2"
+version = "0.3.3"
 edition = "2024"
 include = [
     "**/*.rs",
@@ -21,18 +21,20 @@ description = "Hexagonal Cube-Coordinate System with Spiralling Integer Tile Ide
 rust-version = "1.85"
 
 [dependencies]
-rand = "0.10.1"
-rand_chacha = "0.10.0"
+rand = "0.10.2"
 # Newtypes type-safety but with operators
 # You can specify the types of derives that you need for less time spent
 # compiling. For the full list of features see this crate its `Cargo.toml`.
 derive_more = { version = "2", features = ["from", "add", "mul", "into", "display", "not"] }
 num_enum = {version = "0.7.6"}
-# Floating-Point Comparison for Tests.
-approx_eq = { version = "0.1" }
 cfg-if = "1.0.4"
 # The Serialize and Deserialize traits
-serde = { version = "1.0.219", features = ["derive"] }
+serde = { version = "1.0.229", features = ["derive"] }
+
+[dev-dependencies]
+rand_chacha = "0.10.0"
+# Floating-Point Comparison for Tests.
+approx_eq = { version = "0.1" }
 
 [features]
 # Gating functionality that only compiles with nightly rust.
