@@ -65,16 +65,37 @@ impl std::iter::Step for TileIndex {
         // It is exactly defined when the `n` must be `0` or `n` or `usize::max`. The rest seems not too relevant.
     }
 
+
+    fn forward_overflowing(start: Self, count: usize) -> (Self, bool) {
+        let count_u64 = count as u64;
+        let count_overflow = count_u64 as usize != count;
+
+        let (res_u64, add_overflow) = (start.value() as u64).overflowing_add(count_u64);
+        (res_u64.into(), count_overflow || add_overflow)
+    }
+
+    fn backward_overflowing(start: Self, count: usize) -> (Self, bool) {
+        let count_u64 = count as u64;
+        let count_overflow = count_u64 as usize != count;
+
+        let (res_u64, sub_overflow) = (start.value() as u64).overflowing_sub(count_u64);
+        (res_u64.into(), count_overflow || sub_overflow)
+    }
+
     fn forward_checked(start: Self, count: usize) -> Option<Self> {
-        Some(
-            u64::try_from((start + u64::try_from(count).ok()?).value())
-                .ok()?
-                .into(),
-        )
+        let (val, overflowing) = Self::forward_overflowing(start, count);
+        if overflowing {
+            return None;
+        }
+        Some(val)
     }
 
     fn backward_checked(start: Self, count: usize) -> Option<Self> {
-        (start - u64::try_from(count).ok()?).try_into().ok()
+        let (val, overflowing) = Self::backward_overflowing(start, count);
+        if overflowing {
+            return None;
+        }
+        Some(val)
     }
 }
 }}
