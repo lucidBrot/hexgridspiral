@@ -29,7 +29,7 @@ derive_more = { version = "2", features = ["from", "add", "mul", "into", "displa
 num_enum = {version = "0.7.6"}
 cfg-if = "1.0.4"
 # The Serialize and Deserialize traits
-serde = { version = "1.0.219", features = ["derive"] }
+serde = { version = "1.0.229", features = ["derive"] }
 
 [dev-dependencies]
 rand_chacha = "0.10.0"

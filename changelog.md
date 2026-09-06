@@ -1,5 +1,10 @@
 # Changelog
-Best-Effort (Means: worst-effort, actually).
+## v0.3.3
+
+* Work with current nightly `std 1.100.0-nightly`
+* Upgrade `serde` from `1.0.219`  to `1.0.229`
+* Upgrade `rand` from `0.10.1`  to `0.10.2`
+* Move `rand_chacha` to dev dependencies
 
 ## v0.3.2
 
